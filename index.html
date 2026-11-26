@@ -9,9 +9,6 @@
 .hybrid-vat-switch{align-self:end;min-height:40px;padding:0 4px 8px}
 .assumption-note{margin:12px 0 0;color:var(--muted);font-size:12px}
 @media print{.sidebar,.topbar,.actions,.toolbar,.footer-note,.btn,.add-row{display:none!important}.app{display:block}.card{box-shadow:none;break-inside:avoid}main{padding:0;max-width:none}}
-.hybrid-filter-disclosure { margin: 0 0 14px; }
-.hybrid-filter-disclosure summary { cursor: pointer; color: var(--teal-700); width: fit-content; }
-.hybrid-filter-disclosure[open] summary { margin-bottom: 10px; }
 .hybrid-period{grid-column:span 2;display:grid;grid-template-columns:repeat(2,minmax(170px,1fr));gap:12px;margin:0;padding:10px 12px 12px;border:1px solid var(--line);border-radius:10px}.hybrid-period legend{padding:0 6px;color:var(--muted);font-size:12px;font-weight:700}.hybrid-period .field label{font-weight:600}.hybrid-source-note{grid-column:1/-1;margin:0;padding:10px 12px;border-left:3px solid var(--teal-500);background:var(--teal-50);color:var(--muted);font-size:12px}.hybrid-legacy{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2,#f8fafc)}.hybrid-legacy small{color:var(--muted)}.hybrid-reference-value{display:grid;gap:4px;min-width:110px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2,#f8fafc)}.hybrid-reference-value strong{font-size:14px}.hybrid-mismatch{max-width:180px;color:var(--danger,#b42318);font-weight:600;line-height:1.25}.hybrid-table .format-input{min-width:170px}.hybrid-compare{white-space:nowrap}.hybrid-table tr.is-active td{background:var(--teal-50)}
 @media(max-width:760px){.hybrid-period{grid-column:1/-1;grid-template-columns:1fr}}
 </style>
@@ -554,21 +551,6 @@
 
     heading.id = 'registry-heading';
     tbody.closest('table').setAttribute('aria-labelledby', heading.id);
-    const advanced = document.createElement('details');
-    advanced.className = 'hybrid-filter-disclosure';
-    advanced.open = Boolean(ui.showRegistryFilters);
-    const activeCount = [registryFilters.project, registryFilters.client, registryFilters.product, registryFilters.market !== 'all'].filter(Boolean).length;
-    const summary = document.createElement('summary');
-    summary.textContent = activeCount ? `Фильтры · ${activeCount}` : 'Фильтры';
-    advanced.append(summary);
-    const controls = document.createElement('div');
-    controls.className = 'hybrid-filters';
-    for (const id of ['hybrid-project','hybrid-client','hybrid-product','hybrid-market']) {
-      controls.append(toolbar.querySelector('#' + id).closest('.field'));
-    }
-    advanced.append(controls);
-    toolbar.after(advanced);
-    advanced.addEventListener('toggle', () => { ui.showRegistryFilters = advanced.open; });
     const filtered = state.records.filter(record => {
       const status = displayStatus(record);
       const haystack = [record.number, record.project, ...(record.clients || []), ...(record.lines || []).map(line => line.product)].join(' ');
