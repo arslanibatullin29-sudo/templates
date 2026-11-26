@@ -391,14 +391,17 @@
       cards.forEach((card, index) => {
         const line = r.lines[index]; if (!line) return;
         const row = document.createElement('tr'); row.dataset.lineRow = line.id;
+        if (line.id === r.activeLineId) row.classList.add('is-active');
         const controls = {
-          active: card.querySelector('input[name="activeLine"]'), type: card.querySelector('.line-type'), product: card.querySelector('.line-product'),
+          type: card.querySelector('.line-type'), product: card.querySelector('.line-product'),
           area: card.querySelector('.line-area'), price: card.querySelector('.line-price'), remove: card.querySelector('[data-remove-line]')
         };
         if (controls.product) controls.product.classList.add('wide');
+        const position = document.createElement('strong'); position.textContent = String(index + 1);
+        card.querySelector('.current-radio')?.remove();
         const product = products[line.product] || {};
         const cells = [
-          controls.active, controls.type, controls.product,
+          position, controls.type, controls.product,
           thicknessControl(line, product),
           paramInput(line, 'Размер', line.params['Размер'] || '', 'compact format-input', 'Например, 3210 × 2550'), controls.area,
           calcSpan(baseFor(product, r)), controls.price,
@@ -440,7 +443,6 @@
       button.textContent = 'Сравнить цены';
       button.addEventListener('click', () => {
         r.activeLineId = line.id;
-        const radio = document.querySelector(`input[name="activeLine"][value="${CSS.escape(line.id)}"]`); if (radio) radio.checked = true;
         document.querySelectorAll('[data-line-row]').forEach(row => row.classList.toggle('is-active', row.dataset.lineRow === line.id));
         markDirty();
         document.querySelector('.comparison')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -950,7 +952,7 @@
     function renderEditor(){
       const r=ui.editing, line=activeLine(r), p=products[line.product];
       const action=canManage()?`<button class="btn" data-action="save">Сохранить черновик</button><button class="btn primary" data-action="submit">${r.status==='На доработку'?'Повторно отправить':'Отправить на согласование'}</button>`:'';
-      const lineHtml=r.lines.map((l,i)=>{const d=products[l.product]||products['Low-E 6 мм'],type=d.type,availableProducts=Object.keys(products).filter(name=>products[name].type===type);return `<div class="line-card ${r.activeLineId===l.id?'active':''}" data-line-card="${esc(l.id)}"><div class="line-top"><h3>Позиция ${i+1}</h3><label class="current-radio"><input type="radio" name="activeLine" value="${esc(l.id)}" ${r.activeLineId===l.id?'checked':''}> Сравнивать эту позицию</label>${r.lines.length>1?`<button class="remove" data-remove-line="${esc(l.id)}">Удалить</button>`:''}</div><div class="line-grid"><div class="field"><label>Вид продукции</label><select class="select line-type" data-id="${esc(l.id)}">${productTypes.map(x=>`<option ${x===type?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Продукт из прайса</label><select class="select line-product" data-id="${esc(l.id)}">${availableProducts.map(x=>`<option ${x===l.product?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Площадь, м²</label><input class="input line-area" data-id="${esc(l.id)}" inputmode="decimal" value="${esc(l.area)}"></div><div class="field"><label>Предлагаемая ${priceCaption(r)}, ₽/м²</label><input class="input line-price" data-id="${esc(l.id)}" inputmode="decimal" value="${esc(l.price)}"></div></div></div>`}).join('');
+      const lineHtml=r.lines.map((l,i)=>{const d=products[l.product]||products['Low-E 6 мм'],type=d.type,availableProducts=Object.keys(products).filter(name=>products[name].type===type);return `<div class="line-card ${r.activeLineId===l.id?'active':''}" data-line-card="${esc(l.id)}"><div class="line-top"><h3>Позиция ${i+1}</h3>${r.lines.length>1?`<button class="remove" data-remove-line="${esc(l.id)}">Удалить</button>`:''}</div><div class="line-grid"><div class="field"><label>Вид продукции</label><select class="select line-type" data-id="${esc(l.id)}">${productTypes.map(x=>`<option ${x===type?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Продукт из прайса</label><select class="select line-product" data-id="${esc(l.id)}">${availableProducts.map(x=>`<option ${x===l.product?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Площадь, м²</label><input class="input line-area" data-id="${esc(l.id)}" inputmode="decimal" value="${esc(l.area)}"></div><div class="field"><label>Предлагаемая ${priceCaption(r)}, ₽/м²</label><input class="input line-price" data-id="${esc(l.id)}" inputmode="decimal" value="${esc(l.price)}"></div></div></div>`}).join('');
       const currentCompetitors=r.competitorRows.filter(c=>c.lineId===line.id);
       const comps=currentCompetitors.map((c,i)=>`<div class="line-card"><div class="line-top"><h3>Предложение ${i+1} · к ${esc(line.product)}</h3><button class="remove" data-remove-competitor="${esc(c.id)}">Удалить</button></div><div class="grid-4"><div class="field"><label>Конкурент</label><select class="select comp-maker" data-id="${esc(c.id)}">${competitors.map(x=>`<option ${x===c.maker?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Продукт</label><select class="select comp-product" data-id="${esc(c.id)}">${competitorProducts.map(x=>`<option ${x===c.product?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Толщина, мм</label><select class="select comp-thickness" data-id="${esc(c.id)}">${thicknesses.map(x=>`<option ${x===String(c.thickness)?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>${r.noVat?'Без НДС':'С НДС'}, ₽/м²</label><input class="input comp-price" data-id="${esc(c.id)}" inputmode="decimal" value="${esc(c.price)}"></div></div></div>`).join('');
       return `${crumbs(['Согласование цен',r.number])}${pageHead('Согласование на проект',`${r.number} · ${r.status} · редакция ${r.revision||1}`,action)}<div id="form-error"></div><div class="editor-layout"><div class="editor-main">
@@ -1052,7 +1054,6 @@
       document.querySelectorAll('.line-type').forEach(el=>el.addEventListener('change',e=>{updateEditingFromInputs();const line=ui.editing.lines.find(item=>item.id===e.target.dataset.id),firstProduct=Object.keys(products).find(name=>products[name].type===e.target.value);if(line&&firstProduct)line.product=firstProduct;markDirty();render()}));
       document.querySelectorAll('.line-product,.client-check,#region,#market,#no-vat,.comp-maker,.comp-product,.comp-thickness').forEach(el=>el.addEventListener('change',()=>{updateEditingFromInputs();markDirty();render()}));
       document.querySelectorAll('#project,#start,#due,#extension-date,.line-price,.line-area,.comp-price').forEach(el=>el.addEventListener('input',()=>{updateEditingFromInputs();markDirty();updateLiveNumbers()}));
-      document.querySelectorAll('input[name="activeLine"]').forEach(el=>el.addEventListener('change',e=>{updateEditingFromInputs();ui.editing.activeLineId=e.target.value;markDirty();render()}));
       document.querySelectorAll('[data-remove-line]').forEach(el=>el.addEventListener('click',()=>{updateEditingFromInputs();const lineId=el.dataset.removeLine;ui.editing.lines=ui.editing.lines.filter(x=>x.id!==lineId);ui.editing.competitorRows=ui.editing.competitorRows.filter(x=>x.lineId!==lineId);if(!ui.editing.lines.some(x=>x.id===ui.editing.activeLineId))ui.editing.activeLineId=ui.editing.lines[0].id;markDirty();render()}));
       document.querySelectorAll('[data-remove-competitor]').forEach(el=>el.addEventListener('click',()=>{updateEditingFromInputs();ui.editing.competitorRows=ui.editing.competitorRows.filter(x=>x.id!==el.dataset.removeCompetitor);markDirty();render()}));
       document.getElementById('compare-client')?.addEventListener('change',e=>{ui.compareClient=e.target.value;render()});
