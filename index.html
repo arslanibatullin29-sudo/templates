@@ -524,6 +524,14 @@
     return `<option value="${esc(value)}" ${value === selected ? 'selected' : ''}>${esc(label)}</option>`;
   }
 
+  /** Excel-like text filter: case-insensitive contains; space-separated tokens = AND. */
+  function textMatch(haystack, query) {
+    const tokens = lower(query).split(/\s+/).filter(Boolean);
+    if (!tokens.length) return true;
+    const text = lower(haystack);
+    return tokens.every(token => text.includes(token));
+  }
+
   function patchRegistry(ctx) {
     const { ui, state, products, render, esc, displayStatus } = ctx;
     if (ui.page !== 'registry' || ui.tab !== 'agreements') return;
@@ -540,10 +548,10 @@
     const productNames = [...new Set(state.records.flatMap(record => (record.lines || []).map(line => line.product)))].sort((a, b) => a.localeCompare(b, 'ru'));
     toolbar.className = 'hybrid-filters';
     toolbar.innerHTML = `
-      <div class="field"><label for="hybrid-query">Поиск</label><input id="hybrid-query" class="input" value="${esc(registryFilters.query)}" placeholder="Номер, объект, клиент, ассортимент"></div>
-      <div class="field"><label for="hybrid-project">Объект</label><input id="hybrid-project" class="input" value="${esc(registryFilters.project)}" placeholder="Например, квартал"></div>
-      <div class="field"><label for="hybrid-client">Переработчик / клиент</label><select id="hybrid-client" class="select">${option('', 'Все клиенты', registryFilters.client, esc)}${clients.map(value => option(value, value, registryFilters.client, esc)).join('')}</select></div>
-      <div class="field"><label for="hybrid-product">Ассортимент</label><select id="hybrid-product" class="select">${option('', 'Весь ассортимент', registryFilters.product, esc)}${productNames.map(value => option(value, value, registryFilters.product, esc)).join('')}</select></div>
+      <div class="field"><label for="hybrid-query">Поиск</label><input id="hybrid-query" class="input" value="${esc(registryFilters.query)}" placeholder="Часть номера, объекта, клиента…" autocomplete="off"></div>
+      <div class="field"><label for="hybrid-project">Объект</label><input id="hybrid-project" class="input" value="${esc(registryFilters.project)}" placeholder="Например, квартал" autocomplete="off"></div>
+      <div class="field"><label for="hybrid-client">Переработчик / клиент</label><input id="hybrid-client" class="input" list="hybrid-client-suggest" value="${esc(registryFilters.client)}" placeholder="Все клиенты" autocomplete="off"><datalist id="hybrid-client-suggest">${clients.map(value => `<option value="${esc(value)}">`).join('')}</datalist></div>
+      <div class="field"><label for="hybrid-product">Ассортимент</label><input id="hybrid-product" class="input" list="hybrid-product-suggest" value="${esc(registryFilters.product)}" placeholder="Весь ассортимент" autocomplete="off"><datalist id="hybrid-product-suggest">${productNames.map(value => `<option value="${esc(value)}">`).join('')}</datalist></div>
       <div class="field"><label for="hybrid-market">Тип прайса</label><select id="hybrid-market" class="select">${option('all', 'Все типы', registryFilters.market, esc)}${option('ru', 'Российский', registryFilters.market, esc)}${option('export', 'Экспортный', registryFilters.market, esc)}</select></div>
       <div class="field"><label for="status-filter">Статус</label><select id="status-filter" class="select">${['Все статусы', 'Новое', 'На согласовании', 'На доработку', 'Утверждено', 'Архив'].map(value => option(value, value, ui.filter, esc)).join('')}</select></div>
       <label class="switch"><input id="waiting" type="checkbox" ${ui.waiting ? 'checked' : ''}><span>Ожидают решения</span></label>
@@ -554,10 +562,10 @@
     const filtered = state.records.filter(record => {
       const status = displayStatus(record);
       const haystack = [record.number, record.project, ...(record.clients || []), ...(record.lines || []).map(line => line.product)].join(' ');
-      return (!registryFilters.query || lower(haystack).includes(lower(registryFilters.query)))
-        && (!registryFilters.project || lower(record.project).includes(lower(registryFilters.project)))
-        && (!registryFilters.client || (record.clients || []).includes(registryFilters.client))
-        && (!registryFilters.product || (record.lines || []).some(line => line.product === registryFilters.product))
+      return textMatch(haystack, registryFilters.query)
+        && textMatch(record.project, registryFilters.project)
+        && textMatch((record.clients || []).join(' '), registryFilters.client)
+        && textMatch((record.lines || []).map(line => line.product).join(' '), registryFilters.product)
         && (registryFilters.market === 'all' || marketOf(record) === registryFilters.market)
         && (ui.filter === 'Все статусы' || status === ui.filter)
         && (!ui.waiting || status === 'На согласовании');
@@ -573,22 +581,21 @@
     if (extra) extra.textContent = `${filtered.length} из ${state.records.length}`;
 
     const rerender = () => render();
-    document.getElementById('hybrid-query').addEventListener('input', event => {
-      registryFilters.query = event.target.value;
-      const position = event.target.selectionStart;
-      rerender();
-      const input = document.getElementById('hybrid-query');
-      if (input) { input.focus(); input.setSelectionRange(position, position); }
-    });
-    document.getElementById('hybrid-project').addEventListener('input', event => {
-      registryFilters.project = event.target.value;
-      const position = event.target.selectionStart;
-      rerender();
-      const input = document.getElementById('hybrid-project');
-      if (input) { input.focus(); input.setSelectionRange(position, position); }
-    });
-    document.getElementById('hybrid-client').addEventListener('change', event => { registryFilters.client = event.target.value; rerender(); });
-    document.getElementById('hybrid-product').addEventListener('change', event => { registryFilters.product = event.target.value; rerender(); });
+    const bindTextFilter = (id, key) => {
+      const node = document.getElementById(id);
+      if (!node) return;
+      node.addEventListener('input', event => {
+        registryFilters[key] = event.target.value;
+        const position = event.target.selectionStart;
+        rerender();
+        const input = document.getElementById(id);
+        if (input) { input.focus(); input.setSelectionRange(position, position); }
+      });
+    };
+    bindTextFilter('hybrid-query', 'query');
+    bindTextFilter('hybrid-project', 'project');
+    bindTextFilter('hybrid-client', 'client');
+    bindTextFilter('hybrid-product', 'product');
     document.getElementById('hybrid-market').addEventListener('change', event => { registryFilters.market = event.target.value; rerender(); });
     document.getElementById('status-filter').addEventListener('change', event => { ui.filter = event.target.value; rerender(); });
     document.getElementById('waiting').addEventListener('change', event => { ui.waiting = event.target.checked; rerender(); });
