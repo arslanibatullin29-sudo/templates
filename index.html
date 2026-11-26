@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CrystaLink CRM — согласование цен</title>
+  <style>.price-type-badge{display:inline-flex;margin-top:5px;padding:2px 7px;border-radius:999px;background:var(--teal-50);color:var(--teal-700);font-size:11px;font-weight:700}
+.price-type-badge.export{background:var(--info-bg);color:var(--info)}
+.hybrid-vat-switch{align-self:end;min-height:40px;padding:0 4px 8px}
+.assumption-note{margin:12px 0 0;color:var(--muted);font-size:12px}
+@media print{.sidebar,.topbar,.actions,.toolbar,.footer-note,.btn,.add-row{display:none!important}.app{display:block}.card{box-shadow:none;break-inside:avoid}main{padding:0;max-width:none}}
+.hybrid-filter-disclosure { margin: 0 0 14px; }
+.hybrid-filter-disclosure summary { cursor: pointer; color: var(--teal-700); width: fit-content; }
+.hybrid-filter-disclosure[open] summary { margin-bottom: 10px; }
+.hybrid-period{grid-column:span 2;display:grid;grid-template-columns:repeat(2,minmax(170px,1fr));gap:12px;margin:0;padding:10px 12px 12px;border:1px solid var(--line);border-radius:10px}.hybrid-period legend{padding:0 6px;color:var(--muted);font-size:12px;font-weight:700}.hybrid-period .field label{font-weight:600}.hybrid-source-note{grid-column:1/-1;margin:0;padding:10px 12px;border-left:3px solid var(--teal-500);background:var(--teal-50);color:var(--muted);font-size:12px}.hybrid-legacy{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2,#f8fafc)}.hybrid-legacy small{color:var(--muted)}.hybrid-reference-value{display:grid;gap:4px;min-width:110px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2,#f8fafc)}.hybrid-reference-value strong{font-size:14px}.hybrid-mismatch{max-width:180px;color:var(--danger,#b42318);font-weight:600;line-height:1.25}.hybrid-table .format-input{min-width:170px}.hybrid-compare{white-space:nowrap}.hybrid-table tr.is-active td{background:var(--teal-50)}
+@media(max-width:760px){.hybrid-period{grid-column:1/-1;grid-template-columns:1fr}}
+</style>
+  <style>
+    :root {
+      --teal-900:#124552; --teal-800:#175c6b; --teal-700:#1b6c7e; --teal-600:#217f93;
+      --teal-500:#2490a8; --teal-100:#e8f2f4; --teal-50:#f2f7f8;
+      --ink:#17252d; --text:#263238; --muted:#647681; --line:#d7e0e5; --line-soft:#e7ecef;
+      --page:#f5f7f9; --surface:#fff; --success:#287443; --success-bg:#f0f5f2;
+      --warning:#946200; --warning-bg:#f8f4ec; --danger:#b42318; --danger-bg:#f7f2f2;
+      --info:#315f9b; --info-bg:#f2f5f8; --shadow:0 1px 3px rgba(23,37,45,.07);
+      --radius:10px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--page);color:var(--text);font:15px/1.45 "Segoe UI",Arial,sans-serif}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer}
+    button:disabled{cursor:not-allowed;opacity:.55}
+    :focus-visible{outline:3px solid rgba(36,144,168,.28);outline-offset:2px}
+    .app{min-height:100vh;display:grid;grid-template:64px 1fr / 232px 1fr;grid-template-areas:"header header" "side main"}
+    .topbar{grid-area:header;background:linear-gradient(90deg,var(--teal-700),var(--teal-500) 58%,var(--teal-900));color:#fff;display:flex;align-items:center;padding:0 28px;gap:12px;box-shadow:0 2px 10px rgba(27,108,126,.18);z-index:5}
+    .brand{font-weight:800;font-size:23px;letter-spacing:-.4px}.brand-sub{font:18px Georgia,serif;opacity:.85}
+    .top-spacer{flex:1}.role-picker{display:flex;align-items:center;gap:10px}
+    .role-picker label{font-size:12px;color:rgba(255,255,255,.8)}
+    .role-picker select{height:36px;border:1px solid rgba(255,255,255,.35);border-radius:8px;background:rgba(255,255,255,.12);color:#fff;padding:0 32px 0 11px}
+    .role-picker option{color:var(--ink);background:#fff}
+    .top-action{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:8px;height:36px;padding:0 12px;font-weight:600}
+    .sidebar{grid-area:side;background:#fff;border-right:1px solid var(--line);padding:30px 10px 18px;position:sticky;top:0;height:calc(100vh - 64px)}
+    .side-title{padding:8px 16px 18px;color:var(--muted);font-size:13px;font-weight:600}
+    .nav{display:grid;gap:5px}.nav button{height:48px;border:0;background:transparent;border-radius:8px;padding:0 14px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--ink)}
+    .nav button:hover{background:#f3f5f6}.nav button.active{background:#e8eef0;color:var(--teal-700);font-weight:700}
+    .ico{width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;flex:none}.ico svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+    main{grid-area:main;padding:28px 38px 64px;min-width:0;max-width:1720px;width:100%;margin:0 auto}
+    .crumbs{font-size:13px;color:var(--muted);margin-bottom:20px}.crumbs button{border:0;background:none;padding:0;color:var(--teal-700)}
+    .page-head{display:flex;align-items:flex-start;gap:22px;margin-bottom:22px}.page-head .grow{flex:1;min-width:0}
+    h1{font-size:28px;line-height:1.2;margin:0;color:var(--ink);letter-spacing:-.35px}h2{font-size:18px;margin:0;color:var(--ink)}h3{font-size:15px;margin:0;color:var(--ink)}
+    .subtitle{margin-top:7px;color:var(--muted)}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .btn{height:40px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:0 16px;font-weight:650;box-shadow:0 1px 0 rgba(36,144,168,.06);display:inline-flex;gap:8px;align-items:center;justify-content:center}
+    .btn:hover{border-color:var(--teal-500);color:var(--teal-700)}.btn.primary{color:#fff;background:var(--teal-700);border-color:var(--teal-700)}.btn.primary:hover{background:var(--teal-900);color:#fff}
+    .btn.danger{color:var(--danger)}.btn.small{height:34px;padding:0 11px;font-size:13px}.btn.ghost{background:transparent;box-shadow:none}
+    .tabs{display:flex;gap:30px;border-bottom:1px solid var(--line);margin:0 0 20px}.tab{border:0;background:none;padding:0 0 12px;color:var(--ink);position:relative}.tab.active{color:var(--teal-500);font-weight:650}.tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--teal-500)}
+    .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+    .card-head{min-height:48px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:10px 16px;gap:16px}.card-head h2{flex:1}.card-extra{color:var(--muted);font-size:13px}.card-body{padding:18px 20px}
+    .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}.field{display:grid;gap:6px;min-width:0}.field>label,.label{color:var(--muted);font-size:13px}
+    .input,.select,.textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;min-height:40px;padding:8px 12px}.input:hover,.select:hover,.textarea:hover{border-color:#aebdc5}.textarea{resize:vertical;min-height:96px}
+    .search-wrap{position:relative;flex:1;min-width:260px;max-width:480px}.search-wrap .input{padding-left:38px}.search-wrap .ico{position:absolute;left:11px;top:11px;color:var(--muted)}
+    .switch{display:inline-flex;align-items:center;gap:9px;white-space:nowrap}.switch input{appearance:none;width:38px;height:22px;border-radius:12px;background:#b7c1c7;position:relative;transition:.2s}.switch input:after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;box-shadow:0 1px 3px #65747c;transition:.2s}.switch input:checked{background:var(--teal-500)}.switch input:checked:after{left:18px}
+    .table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:760px}.data-table th{text-align:left;padding:12px 13px;background:#fafbfc;color:#435c6b;font-size:13px;font-weight:700;border-bottom:1px solid var(--line)}.data-table td{padding:13px;border-bottom:1px solid var(--line);vertical-align:top}.data-table tbody tr:hover{background:#f3f5f6}.data-table tbody tr:last-child td{border-bottom:0}.link{border:0;background:none;padding:0;color:var(--teal-700);font-weight:700;text-align:left}.link:hover{text-decoration:underline}
+    .tag{display:inline-flex;align-items:center;min-height:26px;padding:2px 9px;border:1px solid var(--line);border-radius:7px;background:#f4f6f7;color:var(--muted);font-size:12px;white-space:nowrap}.tag.pending{color:var(--teal-700);background:var(--teal-50)}.tag.returned{color:var(--warning);background:var(--warning-bg)}.tag.approved{color:var(--success);background:var(--success-bg)}.tag.archive{color:var(--muted)}
+    .muted{color:var(--muted)}.empty{text-align:center;padding:44px 20px;color:var(--muted)}.empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:5px}
+    .editor-layout{display:grid;grid-template-columns:minmax(0,1.68fr) minmax(340px,.92fr);gap:18px;align-items:start}.editor-main,.context{min-width:0}.context{position:sticky;top:18px}
+    .grid-2{display:grid;grid-template-columns:1fr 1.25fr;gap:14px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}.grid-4{display:grid;grid-template-columns:.8fr 1.25fr .7fr .85fr;gap:12px}.span-2{grid-column:span 2}
+    .client-checks{display:flex;gap:8px;flex-wrap:wrap}.check-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff}.check-chip:has(input:checked){background:var(--teal-50);border-color:#a9cbd2;color:var(--teal-700)}
+    .line-card{border:1px solid var(--line-soft);border-radius:9px;padding:15px;margin-bottom:12px;background:#fff}.line-card.active{border-color:var(--teal-500);box-shadow:0 0 0 2px rgba(36,144,168,.10)}
+    .line-grid{display:grid;grid-template-columns:1fr 1.2fr .75fr 1fr;gap:14px}
+    .line-top{display:flex;align-items:center;gap:12px;margin-bottom:13px}.line-top h3{flex:1}.current-radio{font-size:12px;color:var(--teal-700);display:flex;align-items:center;gap:6px}.metric{background:#f7f9fa;border-radius:8px;padding:11px 12px}.metric small{display:block;color:var(--muted);margin-top:3px}.metric strong{font-size:17px;color:var(--ink)}
+    .remove{border:0;background:none;color:var(--danger);font-size:13px}.add-row{width:100%;border:1px dashed #afbdc4;background:#fafcfc;color:var(--teal-700);height:42px;border-radius:8px;font-weight:650}
+    .comparison h3{margin:20px 0 9px}.comparison h3:first-child{margin-top:0}.mini-table{width:100%;border-collapse:collapse}.mini-table th,.mini-table td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line-soft);font-size:13px}.mini-table th{color:var(--muted);background:#fafbfc}.range{display:grid;grid-template-columns:repeat(3,1fr);background:var(--teal-50);margin-top:8px}.range div{padding:14px 10px;text-align:center}.range strong{display:block;color:var(--teal-700);font-size:21px}.range small{color:var(--muted)}
+    .market{border-left:3px solid var(--teal-500);padding:7px 0 7px 12px}.market strong{display:block;font-size:20px;color:var(--teal-700)}
+    .calc-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.calc-summary .metric{background:var(--teal-50)}
+    .fca-table{min-width:0;width:100%}.fca-table input{width:90px;min-height:34px;padding:5px 8px}.profit{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:8px;padding-top:13px;gap:18px}.profit b{color:var(--muted)}
+    .notice{border:1px solid #d5dee8;background:var(--info-bg);color:var(--info);border-radius:8px;padding:12px 14px}.notice.warning{background:var(--warning-bg);border-color:#eadcbf;color:#71500d}.error-text{color:var(--danger);font-size:12px;margin-top:4px}.invalid{border-color:var(--danger)!important;background:#fffafa}
+    .decision-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}.decision-summary{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}.decision-summary .metric{background:var(--teal-50)}.decision-summary .metric:first-child strong{font-size:24px;color:var(--teal-700)}.quote{background:var(--warning-bg);border-left:3px solid #b57900;padding:15px;margin:0 0 16px}.timeline{padding-left:18px}.event{position:relative;border-left:1px solid #cbd7dc;padding:0 0 20px 21px}.event:before{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:var(--teal-700);left:-5px;top:5px}.event:last-child{padding-bottom:0}.event time,.event small{display:block;color:var(--muted);font-size:12px}.event b{display:block;color:var(--ink);margin:3px 0}.disclosure{margin-bottom:18px}.disclosure>summary{cursor:pointer;font-weight:700;color:var(--ink);padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}.disclosure[open]>summary{border-radius:var(--radius) var(--radius) 0 0}.disclosure>.card{border-top:0;border-radius:0 0 var(--radius) var(--radius)}
+    .wholesale{display:flex;align-items:center;gap:18px}.wholesale .grow{flex:1}.stage-pill{display:inline-flex;padding:3px 8px;border-radius:20px;background:var(--warning-bg);color:var(--warning);font-size:12px;font-weight:700}
+    .client-list{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:14px}.client-card{border:1px solid var(--line);background:#fff;border-radius:9px;padding:16px;text-align:left}.client-card:hover{border-color:var(--teal-500);box-shadow:var(--shadow)}.client-card b{display:block;color:var(--ink);font-size:16px}.client-card span{color:var(--muted);font-size:13px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(10,29,37,.46);z-index:20;display:none;align-items:center;justify-content:center;padding:20px}.modal-backdrop.open{display:flex}.modal{background:#fff;width:min(560px,100%);border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.25);overflow:hidden}.modal-head{display:flex;align-items:center;border-bottom:1px solid var(--line);padding:16px 20px}.modal-head h2{flex:1}.modal-body{padding:20px}.modal-foot{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--line);padding:14px 20px}
+    .toast{position:fixed;right:24px;bottom:24px;z-index:30;background:var(--ink);color:#fff;border-radius:9px;padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:translateY(90px);opacity:0;transition:.25s}.toast.show{transform:none;opacity:1}
+    .footer-note{color:var(--muted);font-size:12px;text-align:right;margin-top:28px}
+    @media(max-width:1100px){.app{grid-template-columns:76px 1fr}.side-title,.nav button span:last-child{display:none}.nav button{justify-content:center}.editor-layout,.decision-grid{grid-template-columns:1fr}.context{position:static}.client-list{grid-template-columns:1fr 1fr}.grid-4,.line-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:720px){.app{display:block}.topbar{height:auto;min-height:64px;padding:10px 16px;flex-wrap:wrap}.sidebar{position:static;height:auto;padding:6px;border-right:0;border-bottom:1px solid var(--line)}.nav{display:flex;overflow:auto}.nav button{min-width:54px}.role-picker label{display:none}main{padding:20px 14px 50px}.page-head{display:block}.actions{justify-content:flex-start;margin-top:14px}.grid-2,.grid-3,.grid-4,.line-grid,.calc-summary,.decision-summary{grid-template-columns:1fr}.client-list{grid-template-columns:1fr}.card-body{padding:14px}.wholesale{align-items:flex-start}.top-action{display:none}}
+  </style>
+<style>
+  .table-wrap .hybrid-table:not(.show-economy) { table-layout: auto; }
+  .table-wrap .hybrid-table .format-input { min-width: 17ch; }
+  .table-wrap .hybrid-table .line-product { min-width: 15ch; }
+  .table-wrap .hybrid-table .line-type { min-width: 11ch; }
+  .table-wrap .hybrid-table th,.table-wrap .hybrid-table td { padding-inline: 8px; }
+</style>
+</head>
+<body>
+  <div id="app"></div>
+  <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>(function () {
+  'use strict';
+
+  const STYLE_ID = 'hybrid-editor-v3-style';
+  const num = value => {
+    const parsed = Number(String(value ?? '').replace(/\s/g, '').replace(',', '.'));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  function addStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = `
+      .hybrid-head{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+      .hybrid-clients{position:relative}.hybrid-client-control{display:flex;align-items:center;flex-wrap:wrap;gap:6px;max-width:620px;min-height:42px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:#fff}.hybrid-client-control:focus-within{outline:2px solid var(--teal-100);border-color:var(--teal-500)}.hybrid-client-search{flex:1 1 180px;min-width:140px;border:0;outline:0;padding:6px 2px}.hybrid-client-toggle{align-self:stretch;width:30px;border:0;background:transparent;cursor:pointer}.hybrid-client-arrow{display:inline-block;width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}.hybrid-client-toggle[aria-expanded=true] .hybrid-client-arrow{transform:translateY(2px) rotate(225deg)}.hybrid-client-list{position:absolute;z-index:30;left:0;right:0;max-width:620px;max-height:220px;overflow:auto;margin-top:4px;padding:5px;border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.14)}.hybrid-client-list[hidden],.hybrid-client-bridge{display:none}.hybrid-client-option{display:block;width:100%;padding:9px 10px;border:0;border-radius:6px;background:transparent;text-align:left;cursor:pointer}.hybrid-client-option:hover,.hybrid-client-option.is-active{background:var(--teal-50);color:var(--teal-700)}.hybrid-client-empty{padding:9px 10px;color:var(--muted)}.hybrid-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:14px;background:var(--teal-50);color:var(--teal-700);font-size:13px}.hybrid-chip button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:16px;line-height:1}
+      .editor-layout.hybrid-wide{display:block}.editor-layout.hybrid-wide .context{position:static;margin-top:18px}.editor-layout.hybrid-wide .context .card{margin-bottom:18px}
+      .hybrid-table{width:100%;table-layout:fixed}.hybrid-table th{white-space:normal;vertical-align:bottom}.hybrid-table td{vertical-align:top}.hybrid-table .input,.hybrid-table .select{width:100%;min-width:0}.hybrid-table .wide{min-width:0}.hybrid-table .compact{min-width:0;width:100%}.hybrid-table .calc{white-space:nowrap;font-weight:600}.hybrid-table .method{display:block;margin-top:4px;color:var(--muted);font-size:11px;font-weight:400}.hybrid-table .current-radio{font-size:0}.hybrid-table .current-radio input{width:17px;height:17px}.hybrid-table .hybrid-extra{display:none}.hybrid-table.show-economy{min-width:1880px;table-layout:auto}.hybrid-table.show-economy .hybrid-extra{display:table-cell}.hybrid-table.show-economy td{min-width:100px}.hybrid-table.show-economy .wide{min-width:190px}.hybrid-table-toolbar{display:flex;justify-content:flex-end;margin-bottom:10px}.hybrid-details{display:grid;grid-template-columns:repeat(3,minmax(190px,1fr));gap:12px}.hybrid-details .span-2{grid-column:span 2}.hybrid-note{margin-top:12px}.hybrid-advanced{margin-top:14px}.hybrid-advanced summary{cursor:pointer;font-weight:600;padding:4px 0 12px}.hybrid-inline{display:flex;align-items:center;gap:8px;min-height:38px}.hybrid-inline input[type=checkbox]{width:17px;height:17px}@media(max-width:1050px){.hybrid-head,.hybrid-details{grid-template-columns:repeat(2,minmax(160px,1fr))}.hybrid-client-list{grid-template-columns:1fr}.hybrid-table{min-width:900px}}`;
+    document.head.appendChild(style);
+  }
+
+  function field(label, control, cls) {
+    const wrap = document.createElement('div');
+    wrap.className = `field${cls ? ` ${cls}` : ''}`;
+    const lab = document.createElement('label');
+    lab.textContent = label;
+    wrap.append(lab, control);
+    return wrap;
+  }
+
+  function input(value, className, type) {
+    const el = document.createElement('input');
+    el.className = className || 'input';
+    el.type = type || 'text';
+    el.value = value ?? '';
+    return el;
+  }
+
+  function select(options, value) {
+    const el = document.createElement('select');
+    el.className = 'select';
+    options.forEach(([key, label]) => {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = label;
+      option.selected = key === value;
+      el.appendChild(option);
+    });
+    return el;
+  }
+
+  function booleanValue(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    const normalized = String(value ?? '').trim().toLocaleLowerCase('ru');
+    return ['1', 'true', 'yes', 'on', 'да', 'аннулирован', 'аннулировано'].includes(normalized);
+  }
+
+  window.hybridEditor = function hybridEditor(ctx) {
+    const { ui, products, clientDirectory, render, esc, money, markDirty, updateEditingFromInputs } = ctx || {};
+    if (ui?.clientComboCleanup) { ui.clientComboCleanup(); delete ui.clientComboCleanup; }
+    if (!ui || ui.page !== 'editor' || !ui.editing) return;
+    const r = ui.editing;
+    r.details = r.details && typeof r.details === 'object' ? r.details : {};
+    r.lines.forEach(line => { line.params = line.params && typeof line.params === 'object' ? line.params : {}; });
+    addStyles();
+
+    const setDetail = (key, value) => { r.details[key] = value; markDirty(); };
+    const setParam = (line, key, value) => { line.params[key] = value; markDirty(); };
+    const bindValue = (el, setter, live) => {
+      el.addEventListener('input', e => { setter(e.target.value); if (live) updateComputed(); });
+      el.addEventListener('change', e => setter(e.target.type === 'checkbox' ? e.target.checked : e.target.value));
+    };
+
+    enhanceProjectCard();
+    enhanceLines();
+    enhanceCompetitors();
+    enhanceCalculation();
+
+    function enhanceProjectCard() {
+      const start = document.getElementById('start');
+      const card = start && start.closest('.card');
+      if (!card) return;
+      const grid = start.closest('.grid-3');
+      if (grid) grid.className = 'hybrid-head';
+      const startField = start.closest('.field');
+      const dueField = document.getElementById('due')?.closest('.field');
+      if (startField && dueField) {
+        const period = document.createElement('fieldset'); period.className = 'hybrid-period';
+        const legend = document.createElement('legend'); legend.textContent = 'Срок реализации';
+        startField.parentNode.insertBefore(period, startField); period.append(legend, startField, dueField);
+      }
+
+      const checks = card.querySelector('.client-checks');
+      if (checks) enhanceClients(checks);
+
+      const details = document.createElement('details');
+      details.className = 'hybrid-advanced';
+      details.innerHTML = '<summary>Условия и справка исходного документа</summary>';
+      const body = document.createElement('div'); body.className = 'hybrid-details';
+      const cancellationKey = 'Аннулирование исходного документа';
+      r.details[cancellationKey] = booleanValue(r.details[cancellationKey]);
+      const specs = [
+        ['Условия поставки', 'Например, DDP Екатеринбург', 'text'],
+        ['Точка доставки', 'Город, станция или склад', 'text'],
+        ['Тариф исходного документа, ₽ без НДС', '0,00', 'decimal', 'Тариф, ₽ без НДС'],
+        ['Период исходного документа', 'Например, декабрь 2026', 'text', 'Период тарифа'],
+        ['Дата согласования исходного документа', '', 'date'],
+        [cancellationKey, '', 'boolean'],
+        ['Аналитика объекта', 'Сегмент, потенциал, риски', 'text'],
+        ['Условия оплаты', 'Например, предоплата 50%', 'text']
+      ];
+      specs.forEach(([key, placeholder, mode, legacyKey]) => {
+        if (mode === 'boolean') {
+          const checkbox = input('', '', 'checkbox');
+          checkbox.checked = r.details[key];
+          checkbox.addEventListener('change', event => setDetail(key, event.target.checked));
+          const label = document.createElement('label'); label.className = 'hybrid-inline';
+          const text = document.createElement('span'); text.textContent = key;
+          label.append(checkbox, text); body.appendChild(label);
+          return;
+        }
+        const sourceKey = Object.prototype.hasOwnProperty.call(r.details, key) ? key : legacyKey;
+        const initial = sourceKey ? r.details[sourceKey] : (key === 'Дата согласования исходного документа' ? r.approvalDate : '');
+        const el = input(initial || '', 'input', mode === 'date' ? 'date' : 'text'); el.placeholder = placeholder;
+        if (mode === 'decimal') el.inputMode = 'decimal';
+        bindValue(el, value => setDetail(key, value), false);
+        body.appendChild(field(key, el, key === 'Аналитика объекта' ? 'span-2' : ''));
+      });
+      const sourceNote = document.createElement('p'); sourceNote.className = 'hybrid-source-note';
+      sourceNote.textContent = 'Справка из исходного документа. Эти значения не заменяют тарифы клиентов, используемые в расчёте FCA.';
+      body.prepend(sourceNote);
+      details.appendChild(body); card.querySelector('.card-body')?.appendChild(details);
+
+      const extension = document.createElement('details'); extension.className = 'hybrid-advanced hybrid-extension';
+      extension.innerHTML = '<summary>Продление срока</summary>';
+      const extensionBody = document.createElement('div'); extensionBody.className = 'hybrid-details';
+      const extensionDate = input(r.extensionDate || '', 'input', 'date'); extensionDate.id = 'extension-date';
+      bindValue(extensionDate, value => { r.extensionDate = value; markDirty(); }, false);
+      extensionBody.appendChild(field('Продлить по', extensionDate));
+      ['Комментарий к продлению', 'Повторное утверждение'].forEach(key => {
+        const el = input(r.details[key] || '', 'input');
+        el.placeholder = key === 'Комментарий к продлению' ? 'Основание и особые условия' : 'Например, при изменении тарифа более чем на 5%';
+        bindValue(el, value => setDetail(key, value), false); extensionBody.appendChild(field(key, el));
+      });
+      if (r.details['Продление с']) {
+        const legacy = document.createElement('div'); legacy.className = 'hybrid-legacy span-2';
+        legacy.innerHTML = `<b>Прежние данные записи</b><span>«Продление с»: ${esc(r.details['Продление с'])}</span><small>Сохранено для истории; не является утверждением или изменением срока.</small>`;
+        extensionBody.appendChild(legacy);
+      }
+      extension.appendChild(extensionBody); card.querySelector('.card-body')?.appendChild(extension);
+    }
+
+    function enhanceClients(checks) {
+      const parentField = checks.closest('.field');
+      if (!parentField) return;
+      parentField.classList.add('hybrid-clients');
+      checks.className = 'hybrid-client-bridge';
+
+      const control = document.createElement('div'); control.className = 'hybrid-client-control';
+      const search = input('', 'input hybrid-client-search', 'search');
+      const toggle = document.createElement('button'); toggle.type = 'button'; toggle.className = 'hybrid-client-toggle';
+      toggle.setAttribute('aria-label', 'Открыть список клиентов'); toggle.setAttribute('aria-expanded', 'false');
+      const arrow = document.createElement('span'); arrow.className = 'hybrid-client-arrow'; arrow.setAttribute('aria-hidden', 'true'); toggle.appendChild(arrow);
+      const list = document.createElement('div'); list.className = 'hybrid-client-list'; list.hidden = true;
+      const listId = `hybrid-client-list-${String(r.number || 'new').replace(/[^a-z0-9_-]/gi, '-')}`;
+      list.id = listId; list.setAttribute('role', 'listbox'); list.setAttribute('aria-multiselectable', 'true');
+      search.placeholder = 'Найти и выбрать клиента'; search.setAttribute('aria-label', 'Клиенты');
+      search.setAttribute('role', 'combobox'); search.setAttribute('aria-autocomplete', 'list'); search.setAttribute('aria-controls', listId); search.setAttribute('aria-expanded', 'false');
+      parentField.insertBefore(control, checks); parentField.appendChild(list);
+      let activeIndex = -1;
+      const selected = () => Array.isArray(r.clients) ? r.clients : [];
+      const commitClients = clients => {
+        r.clients = [...new Set(clients)];
+        r.tariffs = r.tariffs || {};
+        r.clients.forEach(name => { if (!Object.prototype.hasOwnProperty.call(r.tariffs, name)) r.tariffs[name] = clientDirectory[name]?.tariff ?? null; });
+        ui.restoreClientComboFocus = true; markDirty(); render();
+      };
+      const outsidePointer = event => { if (!parentField.contains(event.target)) close(); };
+      const close = () => { list.hidden = true; search.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', 'Открыть список клиентов'); search.removeAttribute('aria-activedescendant'); activeIndex = -1; document.removeEventListener('pointerdown', outsidePointer); };
+      const open = () => { drawOptions(); list.hidden = false; search.setAttribute('aria-expanded', 'true'); toggle.setAttribute('aria-expanded', 'true'); toggle.setAttribute('aria-label', 'Закрыть список клиентов'); document.addEventListener('pointerdown', outsidePointer); };
+      const drawChips = () => {
+        control.querySelectorAll('.hybrid-chip').forEach(chip => chip.remove());
+        selected().forEach(name => {
+          const chip = document.createElement('span'); chip.className = 'hybrid-chip';
+          const text = document.createElement('span'); text.textContent = name;
+          const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.setAttribute('aria-label', `Удалить ${name}`);
+          remove.addEventListener('click', () => commitClients(selected().filter(client => client !== name)));
+          chip.append(text, remove); control.insertBefore(chip, search);
+        });
+      };
+      const available = () => {
+        const query = search.value.trim().toLocaleLowerCase('ru');
+        return Object.keys(clientDirectory).filter(name => !selected().includes(name) && name.toLocaleLowerCase('ru').includes(query));
+      };
+      const drawOptions = () => {
+        list.replaceChildren(); const names = available();
+        if (activeIndex >= names.length) activeIndex = names.length - 1;
+        names.forEach((name, index) => {
+          const option = document.createElement('button'); option.type = 'button'; option.className = `hybrid-client-option${index === activeIndex ? ' is-active' : ''}`;
+          option.id = `${listId}-option-${index}`; option.setAttribute('role', 'option'); option.setAttribute('aria-selected', 'false'); option.textContent = name;
+          option.addEventListener('mousedown', event => event.preventDefault());
+          option.addEventListener('click', () => commitClients([...selected(), name]));
+          list.appendChild(option);
+        });
+        if (!names.length) { const empty = document.createElement('div'); empty.className = 'hybrid-client-empty'; empty.textContent = 'Подходящих клиентов нет'; list.appendChild(empty); }
+        const active = list.querySelector('.is-active');
+        if (active) { search.setAttribute('aria-activedescendant', active.id); active.scrollIntoView({ block: 'nearest' }); } else search.removeAttribute('aria-activedescendant');
+      };
+      search.addEventListener('focus', open);
+      search.addEventListener('click', () => { if (list.hidden) open(); });
+      search.addEventListener('input', () => { activeIndex = 0; open(); });
+      search.addEventListener('keydown', event => {
+        const names = available();
+        if (event.key === 'Escape') { event.preventDefault(); close(); return; }
+        if (event.key === 'Backspace' && !search.value && selected().length) { event.preventDefault(); commitClients(selected().slice(0, -1)); return; }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault(); if (list.hidden) open();
+          activeIndex = names.length ? (activeIndex + (event.key === 'ArrowDown' ? 1 : -1) + names.length) % names.length : -1; drawOptions(); return;
+        }
+        if (event.key === 'Enter' && !list.hidden && activeIndex >= 0 && names[activeIndex]) { event.preventDefault(); commitClients([...selected(), names[activeIndex]]); }
+      });
+      toggle.addEventListener('click', () => { if (list.hidden) { open(); search.focus(); } else { close(); search.focus(); } });
+      parentField.addEventListener('focusout', event => { if (!parentField.contains(event.relatedTarget)) close(); });
+      control.append(search, toggle); drawChips();
+      ui.clientComboCleanup = close;
+      if (ui.restoreClientComboFocus) { ui.restoreClientComboFocus = false; search.focus(); }
+    }
+
+    function enhanceCompetitors() {
+      document.querySelectorAll('.comp-maker[data-id]').forEach(maker => {
+        const card = maker.closest('.line-card');
+        if (!card || card.querySelector('.hybrid-competitor-source')) return;
+        const competitor = (r.competitorRows || []).find(item => String(item.id) === String(maker.dataset.id));
+        if (!competitor) return;
+
+        const details = document.createElement('details');
+        details.className = 'hybrid-advanced hybrid-competitor-source';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Источник предложения';
+        const body = document.createElement('div');
+        body.className = 'grid-2';
+
+        const client = select(
+          [['', 'Не указан'], ...Object.keys(clientDirectory).map(name => [name, name])],
+          competitor.client || ''
+        );
+        client.classList.add('comp-source-client');
+        client.dataset.id = competitor.id;
+        client.addEventListener('change', () => {
+          competitor.client = client.value;
+          markDirty();
+        });
+
+        const sourceNumber = input(competitor.sourceNumber || '', 'input');
+        sourceNumber.classList.add('comp-source-number');
+        sourceNumber.dataset.id = competitor.id;
+        sourceNumber.placeholder = 'Например, КП-184/26';
+        sourceNumber.maxLength = 120;
+        sourceNumber.addEventListener('input', () => {
+          competitor.sourceNumber = sourceNumber.value;
+          markDirty();
+        });
+
+        body.append(
+          field('Клиент предложения', client),
+          field('Номер записи', sourceNumber)
+        );
+        details.append(summary, body);
+        card.appendChild(details);
+      });
+    }
+
+    function enhanceLines() {
+      const first = document.querySelector('[data-line-card]');
+      const section = first && first.closest('.card');
+      const body = section && section.querySelector('.card-body');
+      if (!body) return;
+      const cards = [...body.querySelectorAll('[data-line-card]')];
+      const add = body.querySelector('[data-action="add-line"]');
+      const toolbar = document.createElement('div'); toolbar.className = 'hybrid-table-toolbar';
+      const economy = document.createElement('button'); economy.type = 'button'; economy.className = 'btn small';
+      const showEconomy = Boolean(ui.showLineEconomy);
+      economy.textContent = showEconomy ? 'Скрыть экономику' : 'Показать экономику';
+      toolbar.appendChild(economy); body.insertBefore(toolbar, cards[0] || add || null);
+      const wrap = document.createElement('div'); wrap.className = 'table-wrap';
+      const table = document.createElement('table'); table.className = `data-table hybrid-table${showEconomy ? ' show-economy' : ''}`;
+      const columns = [
+        ['Позиция', false], ['Вид продукции', false], ['Продукт', false], ['Толщина стекла, мм', false], ['Формат листа, мм (А × Б)', false], ['Площадь, м²', false], ['Базовая цена', false], ['Предложение', false],
+        ['Утверждённая цена', true], ['БП', true], ['Тара', true], ['Себестоимость покрытия', true], ['БП транспорт', true], ['Факт транспорт', true], ['База при 0%', true],
+        ['Предложение без НДС', false], ['Условная доходность, %', true], ['Наценка авто', true], ['Наценка джамбо', true], ['Вычет самовывоза', true], ['Сравнение цен', true], ['Действия', false]
+      ];
+      const thead = document.createElement('thead'); const headRow = document.createElement('tr');
+      columns.forEach(([label, extra]) => { const th = document.createElement('th'); th.textContent = label; if (extra) th.className = 'hybrid-extra'; headRow.appendChild(th); });
+      thead.appendChild(headRow); table.appendChild(thead);
+      const tbody = document.createElement('tbody'); table.appendChild(tbody);
+      cards.forEach((card, index) => {
+        const line = r.lines[index]; if (!line) return;
+        const row = document.createElement('tr'); row.dataset.lineRow = line.id;
+        const controls = {
+          active: card.querySelector('input[name="activeLine"]'), type: card.querySelector('.line-type'), product: card.querySelector('.line-product'),
+          area: card.querySelector('.line-area'), price: card.querySelector('.line-price'), remove: card.querySelector('[data-remove-line]')
+        };
+        if (controls.product) controls.product.classList.add('wide');
+        const product = products[line.product] || {};
+        const cells = [
+          controls.active, controls.type, controls.product,
+          thicknessControl(line, product),
+          paramInput(line, 'Размер', line.params['Размер'] || '', 'compact format-input', 'Например, 3210 × 2550'), controls.area,
+          calcSpan(baseFor(product, r)), controls.price,
+          paramInput(line, 'Утверждённая цена, ₽/м²', line.params['Утверждённая цена, ₽/м²'] || ''),
+          paramInput(line, 'БП, ₽/м²', line.params['БП, ₽/м²'] || ''), paramInput(line, 'Тара, ₽/м²', line.params['Тара, ₽/м²'] || ''),
+          paramInput(line, 'Себестоимость покрытия, ₽/м²', line.params['Себестоимость покрытия, ₽/м²'] || ''),
+          paramInput(line, 'БП транспорт, ₽/м²', line.params['БП транспорт, ₽/м²'] || ''), paramInput(line, 'Факт транспорт, ₽/м²', line.params['Факт транспорт, ₽/м²'] || ''),
+          methodSpan('Ожидает методики', 'Формула базы при 0% не задана'), calcSpan(netOffer(line, r)),
+          methodSpan('Ожидает методики', 'Не задан состав себестоимости'), paramInput(line, 'Наценка авто, ₽/м²', line.params['Наценка авто, ₽/м²'] || ''),
+          paramInput(line, 'Наценка джамбо, ₽/м²', line.params['Наценка джамбо, ₽/м²'] || ''), paramInput(line, 'Вычет самовывоза, ₽/м²', line.params['Вычет самовывоза, ₽/м²'] || ''),
+          compareButton(line), controls.remove
+        ];
+        cells.forEach((control, cellIndex) => { const td = document.createElement('td'); if (columns[cellIndex]?.[1]) td.className = 'hybrid-extra'; if (control) td.appendChild(control); row.appendChild(td); });
+        controls.price?.addEventListener('input', () => { updateEditingFromInputs(); updateComputed(); });
+        tbody.appendChild(row); card.remove();
+      });
+      wrap.appendChild(table); body.insertBefore(wrap, add || null);
+      economy.addEventListener('click', () => { ui.showLineEconomy = !ui.showLineEconomy; table.classList.toggle('show-economy', ui.showLineEconomy); economy.textContent = ui.showLineEconomy ? 'Скрыть экономику' : 'Показать экономику'; });
+      const layout = section.closest('.editor-layout');
+      const comparison = layout?.querySelector('.context');
+      if (layout && comparison) { layout.classList.add('hybrid-wide'); layout.querySelector('.editor-main')?.appendChild(comparison); }
+    }
+
+    function thicknessControl(line, product) {
+      const current = String(product.thickness || '');
+      const legacy = String(line.params['Толщина, мм'] || '');
+      const wrap = document.createElement('div'); wrap.className = 'hybrid-reference-value';
+      const value = document.createElement('strong'); value.textContent = current || 'Не задана'; wrap.appendChild(value);
+      if (legacy && current && legacy !== current) {
+        const old = document.createElement('small'); old.className = 'hybrid-mismatch';
+        old.textContent = `Прежнее значение: ${legacy} мм — сохранено, не совпадает со справочником`;
+        wrap.appendChild(old);
+      }
+      return wrap;
+    }
+
+    function compareButton(line) {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'btn small ghost hybrid-compare';
+      button.textContent = 'Сравнить цены';
+      button.addEventListener('click', () => {
+        r.activeLineId = line.id;
+        const radio = document.querySelector(`input[name="activeLine"][value="${CSS.escape(line.id)}"]`); if (radio) radio.checked = true;
+        document.querySelectorAll('[data-line-row]').forEach(row => row.classList.toggle('is-active', row.dataset.lineRow === line.id));
+        markDirty();
+        document.querySelector('.comparison')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      return button;
+    }
+
+    function paramInput(line, key, value, extraClass, placeholder) {
+      const el = input(value, `input hybrid-param${extraClass ? ` ${extraClass}` : ''}`); el.inputMode = 'decimal'; el.dataset.lineParam = line.id; el.dataset.paramKey = key;
+      if (placeholder) el.placeholder = placeholder;
+      bindValue(el, valueNext => setParam(line, key, valueNext), true); return el;
+    }
+    function calcSpan(value, note) { const span = document.createElement('span'); span.className = 'calc'; span.textContent = money(value); if (note) { const small = document.createElement('small'); small.className = 'method'; small.textContent = note; span.appendChild(small); } return span; }
+    function methodSpan(value, note) { const span = document.createElement('span'); span.className = 'calc'; span.innerHTML = `${esc(value)}<small class="method">${esc(note)}</small>`; return span; }
+    function baseFor(product, record) { try { return typeof window.hBase === 'function' ? num(window.hBase(product, record)) : num(product.base); } catch { return num(product.base); } }
+    function netOffer(line, record) { try { return num(line.price) / window.hFactor(record); } catch { return NaN; } }
+
+    function enhanceCalculation() {
+      const heading = [...document.querySelectorAll('.card h2')].find(el => el.textContent.includes('Расчёт текущего продукта'));
+      const card = heading && heading.closest('.card'); if (!card) return;
+      const note = document.createElement('div'); note.className = 'notice hybrid-note';
+      note.textContent = 'Расчёт учитывает выбранный тип прайса и налогообложение. Прибыльность и база при 0% не вычисляются: методики не заданы.';
+      card.querySelector('.card-body')?.appendChild(note);
+    }
+
+    function updateComputed() {
+      r.lines.forEach(line => {
+        const row = document.querySelector(`[data-line-row="${CSS.escape(line.id)}"]`); if (!row) return;
+        const cells = row.children; const product = products[line.product] || {};
+        if (cells[6]) cells[6].firstElementChild?.replaceWith(calcSpan(baseFor(product, r)));
+        if (cells[15]) cells[15].firstElementChild?.replaceWith(calcSpan(netOffer(line, r)));
+      });
+    }
+  };
+})();
+</script>
+  <script>(function () {
+  'use strict';
+
+  const registryFilters = {
+    query: '',
+    project: '',
+    client: '',
+    product: '',
+    market: 'all'
+  };
+
+  function injectStyles() {
+    if (document.getElementById('hybrid-registry-print-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'hybrid-registry-print-styles';
+    style.textContent = `
+      .hybrid-filters{display:grid;grid-template-columns:repeat(5,minmax(145px,1fr)) auto;gap:10px;align-items:end;margin-bottom:14px}
+      .hybrid-filters .field label{font-size:12px;color:var(--muted);margin-bottom:5px}.hybrid-filter-actions{display:flex;gap:8px}
+      .hybrid-price-switch{display:flex;gap:8px;align-items:center}.hybrid-price-switch .btn.active{border-color:var(--primary);color:var(--primary);background:var(--primary-soft,#eff6ff)}
+      .hybrid-details{margin:0 0 18px}.hybrid-details summary{cursor:pointer;font-weight:700;padding:14px 18px}.hybrid-details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;padding:0 18px 18px}
+      .hybrid-detail{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);padding:7px 0}.hybrid-detail span{color:var(--muted)}
+      .hybrid-print-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.56);display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+      .hybrid-print-dialog{width:min(1120px,100%);background:#fff;border-radius:12px;box-shadow:0 22px 70px rgba(15,23,42,.28);overflow:hidden}
+      .hybrid-print-toolbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:14px 18px;background:#fff;border-bottom:1px solid #d7dde7}.hybrid-print-toolbar h2{margin:0 auto 0 0;font-size:18px}.hybrid-print-test{font-size:13px;color:#166534}
+      .hybrid-print-sheet{padding:18mm 16mm;color:#111827;font:12px/1.4 Arial,sans-serif}.hybrid-print-sheet h1{font-size:22px;margin:0 0 4px}.hybrid-print-sheet h2{font-size:15px;margin:18px 0 8px}.hybrid-print-sheet p{margin:3px 0}.hybrid-print-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 18px;margin:18px 0}.hybrid-print-meta div{border-bottom:1px solid #cbd5e1;padding:4px 0}.hybrid-print-meta b{display:block;font-size:10px;text-transform:uppercase;color:#64748b}
+      .hybrid-print-sheet table{width:100%;border-collapse:collapse;page-break-inside:auto}.hybrid-print-sheet th,.hybrid-print-sheet td{border:1px solid #94a3b8;padding:6px;text-align:left;vertical-align:top}.hybrid-print-sheet th{background:#f1f5f9}.hybrid-print-sheet tr{page-break-inside:avoid}.hybrid-print-num{text-align:right!important;white-space:nowrap}.hybrid-print-notes{white-space:pre-wrap;border:1px solid #cbd5e1;padding:9px}.hybrid-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:30px}.hybrid-signature{padding-top:22px;border-bottom:1px solid #111827}.hybrid-signature small{display:block;margin-top:4px;color:#475569}.hybrid-print-foot{margin-top:20px;font-size:10px;color:#64748b}
+      @media(max-width:900px){.hybrid-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.hybrid-details-grid{grid-template-columns:1fr}.hybrid-print-meta{grid-template-columns:1fr 1fr}}
+      @media print{body.hybrid-printing>*:not(.hybrid-print-backdrop){display:none!important}.hybrid-print-backdrop{position:static;display:block;padding:0;background:#fff;overflow:visible}.hybrid-print-dialog{width:auto;box-shadow:none;border-radius:0}.hybrid-print-toolbar{display:none!important}.hybrid-print-sheet{padding:0}@page{size:A4 landscape;margin:12mm}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  const lower = value => String(value ?? '').trim().toLocaleLowerCase('ru');
+  const marketOf = record => record && record.market === 'export' ? 'export' : 'ru';
+  const marketLabel = market => market === 'export' ? 'Экспортный' : 'Российский';
+  const hiddenDetailKeys = new Set(['Показывать экономику', 'Режимы прайса']);
+  const extensionDetailKeys = new Set(['Продление с', 'Продление до', 'Комментарий к продлению']);
+  function formatDate(value) {
+    if (!value) return '—';
+    const parts = String(value).split('-');
+    return parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : String(value);
+  }
+
+  function option(value, label, selected, esc) {
+    return `<option value="${esc(value)}" ${value === selected ? 'selected' : ''}>${esc(label)}</option>`;
+  }
+
+  function patchRegistry(ctx) {
+    const { ui, state, products, render, esc, displayStatus } = ctx;
+    if (ui.page !== 'registry' || ui.tab !== 'agreements') return;
+    const heading = [...document.querySelectorAll('.card-head h2')].find(node => node.textContent.trim() === 'Реестр согласований');
+    const card = heading && heading.closest('.card');
+    if (!card) return;
+    const body = card.querySelector('.card-body');
+    const toolbar = body && body.querySelector('.toolbar');
+    const thead = body && body.querySelector('thead');
+    const tbody = body && body.querySelector('tbody');
+    if (!toolbar || !thead || !tbody) return;
+
+    const clients = [...new Set(state.records.flatMap(record => record.clients || []))].sort((a, b) => a.localeCompare(b, 'ru'));
+    const productNames = [...new Set(state.records.flatMap(record => (record.lines || []).map(line => line.product)))].sort((a, b) => a.localeCompare(b, 'ru'));
+    toolbar.className = 'hybrid-filters';
+    toolbar.innerHTML = `
+      <div class="field"><label for="hybrid-query">Поиск</label><input id="hybrid-query" class="input" value="${esc(registryFilters.query)}" placeholder="Номер, объект, клиент, ассортимент"></div>
+      <div class="field"><label for="hybrid-project">Объект</label><input id="hybrid-project" class="input" value="${esc(registryFilters.project)}" placeholder="Например, квартал"></div>
+      <div class="field"><label for="hybrid-client">Переработчик / клиент</label><select id="hybrid-client" class="select">${option('', 'Все клиенты', registryFilters.client, esc)}${clients.map(value => option(value, value, registryFilters.client, esc)).join('')}</select></div>
+      <div class="field"><label for="hybrid-product">Ассортимент</label><select id="hybrid-product" class="select">${option('', 'Весь ассортимент', registryFilters.product, esc)}${productNames.map(value => option(value, value, registryFilters.product, esc)).join('')}</select></div>
+      <div class="field"><label for="hybrid-market">Тип прайса</label><select id="hybrid-market" class="select">${option('all', 'Все типы', registryFilters.market, esc)}${option('ru', 'Российский', registryFilters.market, esc)}${option('export', 'Экспортный', registryFilters.market, esc)}</select></div>
+      <div class="field"><label for="status-filter">Статус</label><select id="status-filter" class="select">${['Все статусы', 'Новое', 'На согласовании', 'На доработку', 'Утверждено', 'Архив'].map(value => option(value, value, ui.filter, esc)).join('')}</select></div>
+      <label class="switch"><input id="waiting" type="checkbox" ${ui.waiting ? 'checked' : ''}><span>Ожидают решения</span></label>
+      <div class="hybrid-filter-actions"><button class="btn" id="hybrid-filter-reset" type="button">Сбросить</button></div>`;
+
+    heading.id = 'registry-heading';
+    tbody.closest('table').setAttribute('aria-labelledby', heading.id);
+    const advanced = document.createElement('details');
+    advanced.className = 'hybrid-filter-disclosure';
+    advanced.open = Boolean(ui.showRegistryFilters);
+    const activeCount = [registryFilters.project, registryFilters.client, registryFilters.product, registryFilters.market !== 'all'].filter(Boolean).length;
+    const summary = document.createElement('summary');
+    summary.textContent = activeCount ? `Фильтры · ${activeCount}` : 'Фильтры';
+    advanced.append(summary);
+    const controls = document.createElement('div');
+    controls.className = 'hybrid-filters';
+    for (const id of ['hybrid-project','hybrid-client','hybrid-product','hybrid-market']) {
+      controls.append(toolbar.querySelector('#' + id).closest('.field'));
+    }
+    advanced.append(controls);
+    toolbar.after(advanced);
+    advanced.addEventListener('toggle', () => { ui.showRegistryFilters = advanced.open; });
+    const filtered = state.records.filter(record => {
+      const status = displayStatus(record);
+      const haystack = [record.number, record.project, ...(record.clients || []), ...(record.lines || []).map(line => line.product)].join(' ');
+      return (!registryFilters.query || lower(haystack).includes(lower(registryFilters.query)))
+        && (!registryFilters.project || lower(record.project).includes(lower(registryFilters.project)))
+        && (!registryFilters.client || (record.clients || []).includes(registryFilters.client))
+        && (!registryFilters.product || (record.lines || []).some(line => line.product === registryFilters.product))
+        && (registryFilters.market === 'all' || marketOf(record) === registryFilters.market)
+        && (ui.filter === 'Все статусы' || status === ui.filter)
+        && (!ui.waiting || status === 'На согласовании');
+    });
+
+    thead.innerHTML = '<tr><th>Номер</th><th>Клиент</th><th>Наш ассортимент</th><th>Проект</th><th>Тип прайса</th><th>Статус</th></tr>';
+    tbody.innerHTML = filtered.map(record => `<tr>
+      <td><button class="link" data-hybrid-open="${esc(record.number)}">${esc(record.number)}</button><br><small class="muted">ред. ${esc(record.revision || 1)}</small></td>
+      <td>${(record.clients || []).map(client => `<button class="link" data-hybrid-client="${esc(client)}">${esc(client)}</button>`).join('<span class="muted"> · </span>')}</td>
+      <td>${(record.lines || []).map(line => esc(line.product)).join(', ') || '—'}</td><td>${esc(record.project || '—')}</td>
+      <td><span class="tag">${esc(marketLabel(marketOf(record)))}</span></td><td><span class="tag">${esc(displayStatus(record))}</span></td></tr>`).join('') || '<tr><td colspan="6"><div class="empty"><b>Ничего не найдено</b>Измените условия или сбросьте фильтры.</div></td></tr>';
+    const extra = card.querySelector('.card-extra');
+    if (extra) extra.textContent = `${filtered.length} из ${state.records.length}`;
+
+    const rerender = () => render();
+    document.getElementById('hybrid-query').addEventListener('input', event => {
+      registryFilters.query = event.target.value;
+      const position = event.target.selectionStart;
+      rerender();
+      const input = document.getElementById('hybrid-query');
+      if (input) { input.focus(); input.setSelectionRange(position, position); }
+    });
+    document.getElementById('hybrid-project').addEventListener('input', event => {
+      registryFilters.project = event.target.value;
+      const position = event.target.selectionStart;
+      rerender();
+      const input = document.getElementById('hybrid-project');
+      if (input) { input.focus(); input.setSelectionRange(position, position); }
+    });
+    document.getElementById('hybrid-client').addEventListener('change', event => { registryFilters.client = event.target.value; rerender(); });
+    document.getElementById('hybrid-product').addEventListener('change', event => { registryFilters.product = event.target.value; rerender(); });
+    document.getElementById('hybrid-market').addEventListener('change', event => { registryFilters.market = event.target.value; rerender(); });
+    document.getElementById('status-filter').addEventListener('change', event => { ui.filter = event.target.value; rerender(); });
+    document.getElementById('waiting').addEventListener('change', event => { ui.waiting = event.target.checked; rerender(); });
+    document.getElementById('hybrid-filter-reset').addEventListener('click', () => {
+      registryFilters.query = ''; registryFilters.project = ''; registryFilters.client = ''; registryFilters.product = ''; registryFilters.market = 'all';
+      ui.filter = 'Все статусы'; ui.waiting = false; ui.search = '';
+      rerender();
+    });
+    body.querySelectorAll('[data-hybrid-open]').forEach(button => button.addEventListener('click', () => {
+      const record = state.records.find(item => item.number === button.dataset.hybridOpen);
+      if (!record) return;
+      ui.currentNumber = record.number;
+      if (displayStatus(record) === 'Новое' && (state.role === 'manager' || state.role === 'demo')) {
+        ui.editing = JSON.parse(JSON.stringify(record)); ui.page = 'editor';
+      } else ui.page = 'decision';
+      render();
+    }));
+    body.querySelectorAll('[data-hybrid-client]').forEach(button => button.addEventListener('click', () => {
+      ui.client = button.dataset.hybridClient; ui.clientTab = 'prices'; ui.page = 'client'; render();
+    }));
+  }
+
+  function patchPriceList(ctx) {
+    const { ui, products, esc, money, render } = ctx;
+    if (ui.page !== 'registry' || ui.tab !== 'price-list') return;
+    const heading = [...document.querySelectorAll('.card-head h2')].find(node => node.textContent.trim() === 'Архитектурный прайс');
+    const card = heading && heading.closest('.card');
+    if (!card) return;
+    ui.priceMarket = ui.priceMarket === 'export' ? 'export' : 'ru';
+    const head = card.querySelector('.card-head');
+    const oldExtra = head.querySelector('.tag');
+    if (oldExtra) oldExtra.remove();
+    head.insertAdjacentHTML('beforeend', `<div class="hybrid-price-switch"><button class="btn small ${ui.priceMarket === 'ru' ? 'active' : ''}" data-price-market="ru">Российский</button><button class="btn small ${ui.priceMarket === 'export' ? 'active' : ''}" data-price-market="export">Экспортный</button></div>`);
+    const table = card.querySelector('table');
+    if (table) {
+      table.querySelector('thead').innerHTML = `<tr><th>Строка прайса</th><th>Категория</th><th>Рынок</th><th>База с НДС, ₽/м²</th><th>База без НДС, ₽/м²</th></tr>`;
+      table.querySelector('tbody').innerHTML = Object.entries(products).map(([name, product]) => {
+        const withVat = { market: ui.priceMarket, noVat: false };
+        const withoutVat = { market: ui.priceMarket, noVat: true };
+        return `<tr><td><strong>${esc(name)}</strong></td><td>${esc(product.type || '—')}</td><td>${esc(marketLabel(ui.priceMarket))}</td><td>${money(window.hBase(product, withVat))}</td><td>${money(window.hBase(product, withoutVat))}</td></tr>`;
+      }).join('');
+    }
+    card.querySelectorAll('[data-price-market]').forEach(button => button.addEventListener('click', () => { ui.priceMarket = button.dataset.priceMarket; render(); }));
+  }
+
+  function printableValue(value) {
+    if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
+    if (Array.isArray(value)) return value.map(printableValue).filter(Boolean).join(', ');
+    if (value && typeof value === 'object') return Object.entries(value).map(([key, item]) => `${key}: ${printableValue(item)}`).join('; ');
+    return value == null ? '' : String(value);
+  }
+
+  function visibleEntries(object, omittedKeys = new Set()) {
+    const entries = [];
+    const seen = new Set();
+    Object.entries(object || {}).forEach(([sourceKey, value]) => {
+      if (hiddenDetailKeys.has(sourceKey) || omittedKeys.has(sourceKey) || value === '' || value == null) return;
+      const key = sourceKey === 'Размер' ? 'Формат листа, мм (А × Б)' : sourceKey === 'Толщина, мм' ? 'Толщина стекла, мм' : sourceKey;
+      const fingerprint = `${lower(key)}\u0000${lower(printableValue(value))}`;
+      if (seen.has(fingerprint)) return;
+      seen.add(fingerprint);
+      entries.push([key, value]);
+    });
+    return entries;
+  }
+
+  function entriesHtml(object, esc, omittedKeys) {
+    return visibleEntries(object, omittedKeys).map(([key, value]) => `<div class="hybrid-detail"><span>${esc(key)}</span><b>${esc(printableValue(value))}</b></div>`).join('');
+  }
+
+  function hasVisibleDetails(object, omittedKeys) {
+    return visibleEntries(object, omittedKeys).length > 0;
+  }
+
+  function extensionEntries(record) {
+    const details = record.details || {};
+    const candidates = [
+      ['Продление с', details['Продление с']],
+      ['Продление до', record.extensionDate || details['Продление до']],
+      ['Комментарий к продлению', details['Комментарий к продлению']]
+    ];
+    return candidates.filter(([, value]) => value !== '' && value != null).map(([key, value]) => [key, key === 'Комментарий к продлению' ? value : formatDate(value)]);
+  }
+
+  function dateRange(start, due) {
+    return [start, due].filter(Boolean).map(formatDate).join(' — ') || '—';
+  }
+
+  function patchDecisionDetails(ctx, record) {
+    if (ctx.ui.page !== 'decision' || !record) return;
+    const blocks = [];
+    if (hasVisibleDetails(record.details, extensionDetailKeys)) blocks.push(`<div><h3>Параметры проекта</h3>${entriesHtml(record.details, ctx.esc, extensionDetailKeys)}</div>`);
+    const extensions = extensionEntries(record);
+    if (extensions.length) blocks.push(`<div><h3>Продление</h3>${entriesHtml(Object.fromEntries(extensions), ctx.esc)}</div>`);
+    (record.lines || []).forEach((line, index) => {
+      if (hasVisibleDetails(line.params)) blocks.push(`<div><h3>Позиция ${index + 1} · ${ctx.esc(line.product)}</h3>${entriesHtml(line.params, ctx.esc)}</div>`);
+    });
+    if (!blocks.length || document.getElementById('hybrid-decision-details')) return;
+    const firstCard = document.querySelector('main .card');
+    if (firstCard) firstCard.insertAdjacentHTML('afterend', `<details class="card hybrid-details" id="hybrid-decision-details"><summary>Параметры проекта и позиций</summary><div class="hybrid-details-grid">${blocks.join('')}</div></details>`);
+  }
+
+  function printDocument(ctx, record) {
+    const { products, clientDirectory, esc, money, displayStatus } = ctx;
+    const factor = window.hFactor(record);
+    const priceLabel = record.noVat ? 'без НДС' : 'с НДС';
+    const status = displayStatus(record);
+    const sourceApprovalDate = record.details?.['Дата согласования исходного документа'] || '';
+    const approvalDate = record.status === 'Утверждено' ? record.approvalDate || '' : '';
+    const projectTotal = (record.lines || []).reduce((sum, line) => sum + Number(line.area || 0) * Number(line.price || 0), 0);
+    const lineRows = (record.lines || []).map((line, index) => {
+      const product = products[line.product] || {};
+      const price = Number(line.price);
+      const params = entriesHtml(line.params, esc);
+      return `<tr><td>${index + 1}</td><td><b>${esc(line.product)}</b>${params ? `<div>${params}</div>` : ''}</td><td class="hybrid-print-num">${money(line.area)}</td><td class="hybrid-print-num">${money(window.hBase(product, record))}</td><td class="hybrid-print-num">${money(price)}</td><td class="hybrid-print-num">${money(Number(line.area) * price)}</td></tr>`;
+    }).join('');
+    const clientRows = (record.clients || []).map(client => {
+      const directory = clientDirectory[client] || {};
+      const tariff = record.tariffs && Object.prototype.hasOwnProperty.call(record.tariffs, client) ? record.tariffs[client] : directory.tariff;
+      const fca = (record.lines || []).map(line => `${line.product} — ${tariff == null ? '—' : money(Number(line.price) / factor - Number(tariff))}`).join('<br>');
+      const tariffPeriod = record.tariffPeriods?.[client] || record.tariffPeriod || directory.tariffMonth || '—';
+      return `<tr><td>${esc(client)}</td><td>${esc(directory.delivery || '—')}</td><td>${esc(printableValue(tariffPeriod))}</td><td class="hybrid-print-num">${tariff == null ? '—' : money(tariff)}</td><td class="hybrid-print-num">${fca || '—'}</td></tr>`;
+    }).join('');
+    const competitors = (record.competitorRows || []).map(row => {
+      const own = (record.lines || []).find(line => line.id === row.lineId);
+      const source = [row.client, row.sourceNumber].filter(Boolean).join(' / ');
+      return `<tr><td>${esc(own?.product || '—')}</td><td>${esc(row.maker || '—')}</td><td>${esc(row.product || '—')}${source ? `<br><small>Источник: ${esc(source)}</small>` : ''}</td><td>${esc(row.thickness || '—')}</td><td class="hybrid-print-num">${money(Number(row.price))}</td></tr>`;
+    }).join('');
+    const omittedProjectKeys = new Set([...extensionDetailKeys, 'Дата согласования исходного документа']);
+    const detailRows = entriesHtml(record.details, esc, omittedProjectKeys);
+    const extensions = extensionEntries(record);
+    const extensionRows = entriesHtml(Object.fromEntries(extensions), esc);
+    const approvalMeta = [
+      sourceApprovalDate ? `<div><b>Дата согласования исходного документа</b>${formatDate(sourceApprovalDate)}</div>` : '',
+      approvalDate ? `<div><b>Дата утверждения</b>${formatDate(approvalDate)}</div>` : ''
+    ].filter(Boolean).join('');
+    return `<article class="hybrid-print-sheet" data-print-sheet>
+      <p><b>Внутренняя форма</b></p><h1>Согласование проектной цены № ${esc(record.number || '—')}</h1><p>Редакция ${esc(record.revision || 1)}</p>
+      <div class="hybrid-print-meta"><div><b>Объект</b>${esc(record.project || '—')}</div><div><b>Срок реализации</b>${dateRange(record.start, record.due)}</div>${approvalMeta}<div><b>Статус</b>${esc(status)}</div><div><b>Тип прайса</b>${esc(marketLabel(marketOf(record)))}</div><div><b>Цены</b>${esc(priceLabel)}</div><div><b>Регион</b>${esc(record.region || '—')}</div></div>
+      ${extensionRows ? `<h2>Продление</h2><div class="hybrid-details-grid">${extensionRows}</div>` : ''}
+      ${detailRows ? `<h2>Параметры проекта</h2><div class="hybrid-details-grid">${detailRows}</div>` : ''}
+      <h2>Все позиции</h2><table data-print-lines><thead><tr><th>№</th><th>Ассортимент и параметры</th><th>Площадь, м²</th><th>База ${esc(priceLabel)}, ₽/м²</th><th>Предложено ${esc(priceLabel)}, ₽/м²</th><th>Сумма ${esc(priceLabel)}, ₽</th></tr></thead><tbody>${lineRows || '<tr><td colspan="6">Позиции не указаны</td></tr>'}</tbody>${lineRows ? `<tfoot><tr><th colspan="5">Итого по всем позициям ${esc(priceLabel)}</th><th class="hybrid-print-num">${money(projectTotal)}</th></tr></tfoot>` : ''}</table>
+      <p><b>Основание расчёта:</b> базовый прайс по продукту; сумма позиции = площадь × предложенная цена. FCA = предложение без НДС − тариф.</p>
+      <h2>Клиенты, тарифы и FCA</h2><table data-print-clients><thead><tr><th>Переработчик / клиент</th><th>Город / станция</th><th>Период тарифа</th><th>Тариф без НДС, ₽/м²</th><th>FCA по позициям, ₽/м²</th></tr></thead><tbody>${clientRows || '<tr><td colspan="5">Клиенты не указаны</td></tr>'}</tbody></table>
+      <h2>Предложения конкурентов</h2><table data-print-competitors><thead><tr><th>Наша позиция</th><th>Конкурент</th><th>Продукт</th><th>Толщина, мм</th><th>Цена ${esc(priceLabel)}, ₽/м²</th></tr></thead><tbody>${competitors || '<tr><td colspan="5">Предложения конкурентов не указаны</td></tr>'}</tbody></table>
+      ${record.notes || record.comment || record.returnComment ? `<h2>Комментарии</h2><div class="hybrid-print-notes">${esc(record.notes || record.comment || record.returnComment)}</div>` : ''}
+      <div class="hybrid-signatures"><div class="hybrid-signature">Менеджер продаж<small>подпись / ФИО / дата</small></div><div class="hybrid-signature">Руководитель продаж<small>подпись / ФИО / ${approvalDate ? formatDate(approvalDate) : 'дата'}</small></div><div class="hybrid-signature">Ответственный за прайс<small>подпись / ФИО / дата</small></div></div>
+      <div class="hybrid-print-foot">Учебные данные. Сформировано для внутреннего согласования.</div></article>`;
+  }
+
+  function openPreview(ctx, record) {
+    document.querySelector('.hybrid-print-backdrop')?.remove();
+    const overlay = document.createElement('div');
+    overlay.className = 'hybrid-print-backdrop';
+    overlay.innerHTML = `<div class="hybrid-print-dialog" role="dialog" aria-modal="true" aria-labelledby="hybrid-print-title"><div class="hybrid-print-toolbar"><h2 id="hybrid-print-title">Предосмотр печатной формы</h2><button class="btn primary" type="button" data-system-print>Системная печать</button><button class="btn" type="button" data-print-close>Закрыть</button></div>${printDocument(ctx, record)}</div>`;
+    document.body.appendChild(overlay);
+    const close = () => { document.body.classList.remove('hybrid-printing'); overlay.remove(); };
+    overlay.querySelector('[data-print-close]').addEventListener('click', close);
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    overlay.querySelector('[data-system-print]').addEventListener('click', () => {
+      document.body.classList.add('hybrid-printing');
+      window.addEventListener('afterprint', () => document.body.classList.remove('hybrid-printing'), { once: true });
+      window.print();
+    });
+    const required = ['[data-print-sheet]', '[data-print-lines]', '[data-print-clients]', '[data-print-competitors]'];
+    const printIsComplete = required.every(selector => overlay.querySelector(selector)) && overlay.querySelectorAll('[data-print-lines] tbody tr').length === (record.lines || []).length;
+    if (!printIsComplete) console.error('Печатная форма собрана не полностью');
+  }
+
+  function patchPrintAction(ctx) {
+    if (!['editor', 'decision'].includes(ctx.ui.page)) return;
+    const record = ctx.ui.page === 'editor' ? ctx.ui.editing : ctx.current();
+    if (!record) return;
+    const actions = document.querySelector('.page-head .actions');
+    if (!actions || actions.querySelector('[data-hybrid-print]')) return;
+    const button = document.createElement('button');
+    button.className = 'btn'; button.type = 'button'; button.dataset.hybridPrint = ''; button.textContent = 'Печатная форма';
+    button.addEventListener('click', () => {
+      if (ctx.ui.page === 'editor') ctx.updateEditingFromInputs();
+      openPreview(ctx, record);
+    });
+    actions.prepend(button);
+  }
+
+  window.hybridRegistry = function hybridRegistry(context) {
+    injectStyles();
+    const record = context.ui.page === 'editor' ? context.ui.editing : context.current();
+    patchRegistry(context);
+    patchPriceList(context);
+    patchDecisionDetails(context, record);
+    patchPrintAction(context);
+  };
+})();
+</script>
+  <script>
+  (() => {
+    'use strict';
+    const STORAGE_KEY = 'crystalink.project-price-review-v3.hybrid';
+    const VAT = 1.22;
+    const DEMO_DATE = '2026-11-24';
+    const products = {
+      'Low-E 6 мм': {type:'Low-E', base:1300, exportNet:1175, competitor:'Низкоэмиссионное', thickness:'6'},
+      'MF 8 мм': {type:'MF', base:1580, exportNet:1420, competitor:'Мультифункциональное', thickness:'8'},
+      'Прозрачное 6 мм': {type:'Прозрачное', base:890, exportNet:790, competitor:'Флоат-стекло', thickness:'6'},
+      'Архитектурное 8 мм': {type:'Архитектурное', base:1760, exportNet:1610, competitor:'Архитектурное', thickness:'8'},
+      'Окрашенное 6 мм': {type:'Окрашенное', base:1420, exportNet:1290, competitor:'Тонированное', thickness:'6'},
+      'Зеркало 4 мм': {type:'Зеркало', base:1110, exportNet:970, competitor:'Зеркало', thickness:'4'},
+      'Просветлённое 6 мм': {type:'Просветлённое', base:1880, exportNet:1730, competitor:'Просветлённое', thickness:'6'}
+    };
+    const productTypes = [...new Set(Object.values(products).map(product => product.type))];
+    const clientDirectory = {
+      'Фасад Урал': {region:'Свердловская область', delivery:'Екатеринбург · город', tariff:80, tariffMonth:'ноябрь 2026'},
+      'Вектор Стекло': {region:'Свердловская область', delivery:'Шарташ · станция', tariff:130, tariffMonth:'ноябрь 2026'},
+      'Стеклоформ': {region:'Свердловская область', delivery:'Берёзовский · город', tariff:95, tariffMonth:'ноябрь 2026'},
+      'Север Фасад': {region:'Тюменская область', delivery:'Тюмень · город', tariff:115, tariffMonth:'ноябрь 2026'},
+      'Линия фасада': {region:'Пермский край', delivery:'Пермь II · станция', tariff:145, tariffMonth:'ноябрь 2026'},
+      'Новый клиент': {region:'Регион не указан', delivery:'Точка доставки не указана', tariff:null, tariffMonth:'ноябрь 2026'}
+    };
+    const history = [
+      {client:'Фасад Урал', product:'Low-E 6 мм', date:'12.11.2026', offered:1250, approved:1260, region:'Свердловская область'},
+      {client:'Фасад Урал', product:'MF 8 мм', date:'05.11.2026', offered:1480, approved:1480, region:'Свердловская область'},
+      {client:'Стеклоформ', product:'Low-E 6 мм', date:'28.10.2026', offered:1260, approved:1260, region:'Свердловская область'},
+      {client:'Вектор Стекло', product:'Прозрачное 6 мм', date:'17.10.2026', offered:880, approved:900, region:'Свердловская область'},
+      {client:'Север Фасад', product:'Low-E 6 мм', date:'02.10.2026', offered:1320, approved:1300, region:'Тюменская область'}
+    ];
+    const competitorHistory = {
+      'Larta|Низкоэмиссионное|6':[1240,1260], 'AIG|Низкоэмиссионное|6':[1280,1290],
+      'Trakia|Низкоэмиссионное|6':[1210,1235], 'Orda Glass|Низкоэмиссионное|6':[1190,1220],
+      'Gomel|Низкоэмиссионное|6':[1180,1200], 'Interglass|Низкоэмиссионное|6':[1270,1310]
+    };
+    const competitors = ['AIG','Larta','Trakia','Orda Glass','Gomel','Interglass'];
+    const competitorProducts = ['Низкоэмиссионное','Мультифункциональное','Флоат-стекло','Архитектурное','Тонированное','Зеркало','Просветлённое'];
+    const thicknesses = ['4','6','8','10','12'];
+    const deepCopy = value => JSON.parse(JSON.stringify(value));
+    const defaultRecord = () => ({
+      number:'ЦР-0148', project:'Речной квартал', market:'ru', noVat:false, start:'2026-12-01', due:'2027-03-31', extensionDate:'', region:'Свердловская область',
+      clients:['Фасад Урал','Вектор Стекло'], tariffs:{'Фасад Урал':80,'Вектор Стекло':130}, status:'На согласовании', revision:2,
+      lines:[{id:'l1',product:'Low-E 6 мм',area:1000,price:1220}], activeLineId:'l1',
+      competitorRows:[{id:'c1',lineId:'l1',maker:'Larta',product:'Низкоэмиссионное',thickness:'6',price:1230}],
+      returnComment:'Пересмотрите цену с учётом доставки через станцию Шарташ',
+      returnSnapshot:{revision:1,lines:[{id:'l1',product:'Low-E 6 мм',area:1000,price:1195.60}],tariffs:{'Фасад Урал':80,'Вектор Стекло':130},at:'23 ноября · 14:40'},
+      created:true, history:[
+        {at:'23 ноября · 15:20',title:'Ожидается решение',text:'Руководитель продаж · редакция 2'},
+        {at:'23 ноября · 15:10',title:'Менеджер отправил исправления',text:'Цена повышена на 24,40 ₽/м² с НДС'},
+        {at:'23 ноября · 14:40',title:'Возвращено на доработку',text:'Комментарий к редакции 1'},
+        {at:'23 ноября · 14:10',title:'Отправлено на согласование',text:'Менеджер продаж · редакция 1'}
+      ]
+    });
+    const exportDraft = () => ({number:'ЦР-0149',project:'Экспортный терминал «Север»',market:'export',noVat:true,start:'2027-01-15',due:'2027-09-30',extensionDate:'2027-12-31',approvalDate:'2026-12-10',region:'Свердловская область',clients:['Фасад Урал','Вектор Стекло'],tariffs:{'Фасад Урал':80,'Вектор Стекло':130},details:{'Условия поставки':'FCA Екатеринбург','Точка доставки':'станция Шарташ','Тариф, ₽ без НДС':'130','Период тарифа':'январь–март 2027','Продление с':'2027-10-01','Комментарий к продлению':'Опцион на продление поставок до конца 2027 года','Повторное утверждение':'При изменении тарифа более чем на 5%','Аналитика объекта':'Экспортный инфраструктурный объект; высокий потенциал объёма, средний логистический риск','Условия оплаты':'Предоплата 50%, остаток перед отгрузкой'},status:'Новое',revision:1,lines:[{id:'e1',product:'Low-E 6 мм',area:1200,price:1180,params:{'Толщина, мм':'6','Размер':'3210 × 2550 мм','Утверждённая цена, ₽/м²':'','БП, ₽/м²':'1040','Тара, ₽/м²':'32','Себестоимость покрытия, ₽/м²':'145','БП транспорт, ₽/м²':'118','Факт транспорт, ₽/м²':'130','Наценка авто, ₽/м²':'24','Наценка джамбо, ₽/м²':'18','Вычет самовывоза, ₽/м²':'0'}},{id:'e2',product:'MF 8 мм',area:680,price:1460,params:{'Толщина, мм':'8','Размер':'3210 × 6000 мм','Утверждённая цена, ₽/м²':'','БП, ₽/м²':'1290','Тара, ₽/м²':'38','Себестоимость покрытия, ₽/м²':'210','БП транспорт, ₽/м²':'118','Факт транспорт, ₽/м²':'130','Наценка авто, ₽/м²':'26','Наценка джамбо, ₽/м²':'20','Вычет самовывоза, ₽/м²':'0'}}],activeLineId:'e1',competitorRows:[{id:'ec1',lineId:'e1',maker:'Larta',product:'Низкоэмиссионное',thickness:'6',price:1210}],history:[]});
+    const seed = () => ({records:[exportDraft(),defaultRecord(),
+      {number:'ЦР-0147',project:'Деловой центр «Маяк»',market:'export',noVat:true,start:'2026-12-15',due:'2027-02-28',extensionDate:'',region:'Свердловская область',clients:['Стеклоформ'],status:'Новое',revision:1,lines:[{id:'x1',product:'MF 8 мм',area:640,price:1424.59}],activeLineId:'x1',competitorRows:[],history:[]},
+      {number:'ЦР-0146',project:'ЖК «Сосны»',due:'2027-06-30',region:'Тюменская область',clients:['Север Фасад'],status:'На доработку',revision:1,lines:[{id:'x2',product:'Прозрачное 6 мм',area:800,price:860},{id:'x3',product:'MF 8 мм',area:350,price:1510}],activeLineId:'x2',competitorRows:[],returnComment:'Уточните объём второй позиции',history:[]},
+      {number:'ЦР-0145',project:'Галерея «Парк»',due:'2026-12-31',region:'Свердловская область',clients:['Фасад Урал'],status:'Утверждено',revision:1,lines:[{id:'x4',product:'Архитектурное 8 мм',area:420,price:1690}],activeLineId:'x4',competitorRows:[],history:[]},
+      {number:'ЦР-0144',project:'Терминал Восточный',due:'2025-10-31',region:'Пермский край',clients:['Линия фасада'],status:'Утверждено',revision:1,lines:[{id:'x5',product:'Просветлённое 6 мм',area:900,price:1810}],activeLineId:'x5',competitorRows:[],history:[]}
+    ],role:'manager'});
+    let state;
+    try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || seed(); } catch { state = seed(); }
+    if (!Array.isArray(state.records)) state = seed();
+    state.records.forEach(record => {
+      record.competitorRows = record.competitorRows || [];
+      record.market = record.market || 'ru';
+      record.noVat = Boolean(record.noVat);
+      record.start = record.start || DEMO_DATE;
+      record.extensionDate = record.extensionDate || '';
+      record.competitorRows.forEach(row => { if (!row.lineId) row.lineId = record.activeLineId; });
+      if (!record.tariffs) record.tariffs = Object.fromEntries(record.clients.map(name => [name, clientDirectory[name]?.tariff ?? null]));
+      if (!record.returnSnapshot && Number.isFinite(Number(record.previousPrice))) {
+        record.returnSnapshot = {
+          revision: Math.max(1, (record.revision || 1) - 1),
+          lines: record.lines.map((line, index) => ({...line, price: index === 0 ? Number(record.previousPrice) : line.price})),
+          tariffs: deepCopy(record.tariffs),
+          at: '23 ноября · 14:40'
+        };
+      }
+      if (record.returnSnapshot) {
+        record.returnSnapshot.market = record.returnSnapshot.market || record.market;
+        if (typeof record.returnSnapshot.noVat !== 'boolean') record.returnSnapshot.noVat = record.noVat;
+      }
+      delete record.previousPrice;
+    });
+    let ui = {page:'registry',tab:'agreements',client:'Фасад Урал',clientTab:'prices',currentNumber:'ЦР-0149',editing:null,dirty:false,filter:'Все статусы',search:'',waiting:false,compareClient:'Фасад Урал'};
+
+    const app = document.getElementById('app');
+    const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    const money = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)) : '—';
+    const qty = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(Number(value)) : '—';
+    const displayStatus = r => r.due && r.due < DEMO_DATE ? 'Архив' : r.status;
+    const statusClass = s => ({'На согласовании':'pending','На доработку':'returned','Утверждено':'approved','Архив':'archive'}[s] || '');
+    const tag = s => `<span class="tag ${statusClass(s)}">${esc(s)}</span>`;
+    const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const current = () => state.records.find(r => r.number === ui.currentNumber) || state.records[0];
+    const activeLine = r => r.lines.find(l => l.id === r.activeLineId) || r.lines[0];
+    // Допущение прототипа: «Прайс без НДС» задаёт режим ввода документа, а не трактовку налогового законодательства.
+    window.hFactor = r => r?.noVat ? 1 : VAT;
+    window.hBase = (productObj, r) => {
+      const domesticNet = Number(productObj?.base || 0) / VAT;
+      const selectedNet = r?.market === 'export' ? productObj.exportNet : domesticNet;
+      return selectedNet * window.hFactor(r);
+    };
+    const modeText = r => `${r.market === 'export' ? 'Экспортный' : 'Российский'} прайс · ${r.noVat ? 'ввод без НДС' : 'ввод с НДС'}`;
+    const priceCaption = r => r.noVat ? 'без НДС' : 'с НДС';
+    const historyInMode = (value, r) => Number(value) / VAT * window.hFactor(r);
+    const dateText = value => value ? value.split('-').reverse().join('.') : '—';
+    const roleLabel = () => state.role === 'manager' ? 'Менеджер продаж' : state.role === 'approver' ? 'Руководитель продаж' : 'Демо · все действия';
+    const canManage = () => state.role === 'manager' || state.role === 'demo';
+    const canDecide = () => state.role === 'approver' || state.role === 'demo';
+    const icon = path => `<span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true">${path}</svg></span>`;
+    const icons = {
+      task:icon('<rect x="5" y="4" width="14" height="16" rx="2"/><path d="m8 10 2 2 4-4M8 16h8"/>'),
+      calendar:icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>'),
+      users:icon('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-4 2-7 6-7s6 3 6 7m0-11a3 3 0 0 1 0 6m2-1c2 .8 3 2.8 3 6"/>'),
+      bell:icon('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>'),
+      audit:icon('<rect x="4" y="3" width="13" height="18" rx="2"/><path d="M8 8h5m-5 4h3m4 2 5 5m0-5-5 5"/>'),
+      search:icon('<circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/>'),
+      plus:icon('<path d="M12 5v14M5 12h14"/>')
+    };
+    function toast(text){const el=document.getElementById('toast');el.textContent=text;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
+    function nowLabel(){return new Intl.DateTimeFormat('ru-RU',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}).format(new Date()).replace(',',' ·')}
+    function shell(content, active='price'){
+      return `<div class="app"><header class="topbar"><span class="brand">CrystaLink</span><span class="brand-sub">CRM</span><span class="top-spacer"></span><div class="role-picker"><label for="role">Роль для демонстрации</label><select id="role"><option value="manager" ${state.role==='manager'?'selected':''}>Менеджер продаж</option><option value="approver" ${state.role==='approver'?'selected':''}>Руководитель продаж</option><option value="demo" ${state.role==='demo'?'selected':''}>Демо · все действия</option></select></div><button class="top-action" data-action="reset">Сбросить демо</button></header>
+      <aside class="sidebar"><div class="side-title">ОТДЕЛ ПРОДАЖ</div><nav class="nav">
+      <button data-nav="tasks">${icons.task}<span>Задачи</span></button><button data-nav="calendar">${icons.calendar}<span>Календарь</span></button><button class="${active==='clients'?'active':''}" data-action="clients">${icons.users}<span>Клиенты</span></button><button data-nav="notifications">${icons.bell}<span>Уведомления</span></button><button class="${active==='price'?'active':''}" data-action="registry">${icons.audit}<span>Согласование цен</span></button>
+      </nav></aside><main>${content}<div class="footer-note">Дата демонстрации: 24.11.2026 · учебные данные · сохраняются только в этом браузере</div></main></div>`;
+    }
+    function crumbs(parts){return `<div class="crumbs"><button data-action="registry">Продажи</button>　/　${parts.map(esc).join('　/　')}</div>`}
+    function pageHead(title,subtitle,actions=''){return `<div class="page-head"><div class="grow"><h1>${esc(title)}</h1>${subtitle?`<div class="subtitle">${esc(subtitle)}</div>`:''}</div><div class="actions">${actions}</div></div>`}
+    function render(){
+      if(ui.page==='registry') app.innerHTML=shell(renderRegistry());
+      else if(ui.page==='editor') app.innerHTML=shell(renderEditor());
+      else if(ui.page==='decision') app.innerHTML=shell(renderDecision());
+      else if(ui.page==='clients') app.innerHTML=shell(renderClients(),'clients');
+      else if(ui.page==='client') app.innerHTML=shell(renderClient(),'clients');
+      bind();
+      const hookContext={ui,state,products,clientDirectory,render,esc,money,markDirty,updateEditingFromInputs,activeLine,DEMO_DATE};
+      window.hybridEditor?.(hookContext);
+      window.hybridRegistry?.({...hookContext,current,displayStatus});
+    }
+    function renderRegistry(){
+      const filtered=state.records.filter(r=>{
+        const s=displayStatus(r), q=ui.search.trim().toLocaleLowerCase('ru');
+        const hay=[r.number,r.project,r.region,r.clients.join(' '),r.lines.map(l=>l.product).join(' ')].join(' ').toLocaleLowerCase('ru');
+        return (!q||hay.includes(q))&&(ui.filter==='Все статусы'||s===ui.filter)&&(!ui.waiting||s==='На согласовании');
+      });
+      const rows=filtered.map(r=>`<tr><td><button class="link" data-open="${esc(r.number)}">${esc(r.number)}</button><br><small class="muted">ред. ${esc(r.revision||1)}</small></td><td>${r.clients.map(c=>`<button class="link" data-client="${esc(c)}">${esc(c)}</button>`).join('<span class="muted"> · </span>')}</td><td>${r.lines.map(l=>esc(l.product)).join(', ')}</td><td>${esc(r.project||'—')}<br><span class="price-type-badge ${r.market==='export'?'export':''}">${esc(modeText(r))}</span><br><small class="muted">${dateText(r.start)} — ${dateText(r.due)}</small></td><td>${tag(displayStatus(r))}</td></tr>`).join('');
+      const priceRows=Object.entries(products).map(([name,p])=>{const domesticNet=p.base/VAT,exportNet=p.exportNet;return `<tr><td><strong>${esc(name)}</strong></td><td>${esc(p.type)}</td><td>${money(domesticNet)}</td><td>${money(domesticNet*VAT)}</td><td>${money(exportNet)}</td><td>${money(exportNet*VAT)}</td></tr>`}).join('');
+      const createAction=canManage()?`<button class="btn primary" data-action="create">${icons.plus}Создать согласование на проект</button>`:'';
+      return `${crumbs(['Согласование цен'])}${pageHead('Согласование цен','',createAction)}
+      <div class="tabs"><button class="tab ${ui.tab==='agreements'?'active':''}" data-tab="agreements">Согласования</button><button class="tab ${ui.tab==='price-list'?'active':''}" data-tab="price-list">Базы прайсов</button><button class="tab ${ui.tab==='wholesale'?'active':''}" data-tab="wholesale">Оптовые прайсы · этап 2</button></div>
+      ${ui.tab==='wholesale'?`<section class="card"><div class="card-head"><h2>Оптовые прайсы</h2><span class="stage-pill">Этап 2</span></div><div class="card-body"><div class="empty"><b>Индивидуальные оптовые цены будут добавлены на втором этапе</b>Сейчас согласуем архитектурные проекты и расположение будущего блока.</div></div></section>`:ui.tab==='price-list'?`<section class="card"><div class="card-head"><h2>Демонстрационные базы прайсов</h2><span class="tag">Учебные данные</span></div><div class="card-body"><div class="notice" style="margin-bottom:16px">Российская net-база рассчитана из исходной цены делением на 1,22. Экспортная net-база выше на 10%. Флаг «Прайс без НДС» меняет режим ввода документа и не является трактовкой налогового законодательства.</div><div class="table-wrap"><table class="data-table"><thead><tr><th>Строка прайса</th><th>Категория</th><th>Россия без НДС</th><th>Россия с НДС</th><th>Экспорт без НДС</th><th>Экспорт с НДС</th></tr></thead><tbody>${priceRows}</tbody></table></div></div></section>`:
+      `<section class="card"><div class="card-head"><h2>Реестр согласований</h2><span class="card-extra">${filtered.length} из ${state.records.length}</span></div><div class="card-body"><div class="toolbar"><div class="search-wrap">${icons.search}<input id="search" class="input" value="${esc(ui.search)}" placeholder="Номер, клиент, проект или ассортимент" autocomplete="off"></div><select id="status-filter" class="select" style="width:190px"><option>Все статусы</option>${['Новое','На согласовании','На доработку','Утверждено','Архив'].map(s=>`<option ${ui.filter===s?'selected':''}>${s}</option>`).join('')}</select><label class="switch"><input id="waiting" type="checkbox" ${ui.waiting?'checked':''}><span>Ждут моего решения</span></label></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Номер</th><th>Клиент</th><th>Наш ассортимент</th><th>Проект</th><th>Статус</th></tr></thead><tbody>${rows||`<tr><td colspan="5"><div class="empty"><b>Ничего не найдено</b>Измените поиск или фильтр статуса.</div></td></tr>`}</tbody></table></div></div></section>`}`;
+    }
+    function renderEditor(){
+      const r=ui.editing, line=activeLine(r), p=products[line.product];
+      const action=canManage()?`<button class="btn" data-action="save">Сохранить черновик</button><button class="btn primary" data-action="submit">${r.status==='На доработку'?'Повторно отправить':'Отправить на согласование'}</button>`:'';
+      const lineHtml=r.lines.map((l,i)=>{const d=products[l.product]||products['Low-E 6 мм'],type=d.type,availableProducts=Object.keys(products).filter(name=>products[name].type===type);return `<div class="line-card ${r.activeLineId===l.id?'active':''}" data-line-card="${esc(l.id)}"><div class="line-top"><h3>Позиция ${i+1}</h3><label class="current-radio"><input type="radio" name="activeLine" value="${esc(l.id)}" ${r.activeLineId===l.id?'checked':''}> Сравнивать эту позицию</label>${r.lines.length>1?`<button class="remove" data-remove-line="${esc(l.id)}">Удалить</button>`:''}</div><div class="line-grid"><div class="field"><label>Вид продукции</label><select class="select line-type" data-id="${esc(l.id)}">${productTypes.map(x=>`<option ${x===type?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Продукт из прайса</label><select class="select line-product" data-id="${esc(l.id)}">${availableProducts.map(x=>`<option ${x===l.product?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Площадь, м²</label><input class="input line-area" data-id="${esc(l.id)}" inputmode="decimal" value="${esc(l.area)}"></div><div class="field"><label>Предлагаемая ${priceCaption(r)}, ₽/м²</label><input class="input line-price" data-id="${esc(l.id)}" inputmode="decimal" value="${esc(l.price)}"></div></div></div>`}).join('');
+      const currentCompetitors=r.competitorRows.filter(c=>c.lineId===line.id);
+      const comps=currentCompetitors.map((c,i)=>`<div class="line-card"><div class="line-top"><h3>Предложение ${i+1} · к ${esc(line.product)}</h3><button class="remove" data-remove-competitor="${esc(c.id)}">Удалить</button></div><div class="grid-4"><div class="field"><label>Конкурент</label><select class="select comp-maker" data-id="${esc(c.id)}">${competitors.map(x=>`<option ${x===c.maker?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Продукт</label><select class="select comp-product" data-id="${esc(c.id)}">${competitorProducts.map(x=>`<option ${x===c.product?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>Толщина, мм</label><select class="select comp-thickness" data-id="${esc(c.id)}">${thicknesses.map(x=>`<option ${x===String(c.thickness)?'selected':''}>${esc(x)}</option>`).join('')}</select></div><div class="field"><label>${r.noVat?'Без НДС':'С НДС'}, ₽/м²</label><input class="input comp-price" data-id="${esc(c.id)}" inputmode="decimal" value="${esc(c.price)}"></div></div></div>`).join('');
+      return `${crumbs(['Согласование цен',r.number])}${pageHead('Согласование на проект',`${r.number} · ${r.status} · редакция ${r.revision||1}`,action)}<div id="form-error"></div><div class="editor-layout"><div class="editor-main">
+      <section class="card"><div class="card-head"><h2>Проект и клиенты</h2></div><div class="card-body"><div class="grid-3"><div class="field"><label>Проект *</label><input id="project" class="input" value="${esc(r.project)}" maxlength="120" placeholder="Например, Речной квартал"></div><div class="field"><label>Тип прайса *</label><select id="market" class="select"><option value="ru" ${r.market==='ru'?'selected':''}>Российский</option><option value="export" ${r.market==='export'?'selected':''}>Экспортный</option></select></div><label class="switch hybrid-vat-switch"><input id="no-vat" type="checkbox" ${r.noVat?'checked':''}><span>Цены без НДС</span></label><div class="field"><label>Срок реализации — с *</label><input id="start" type="date" class="input" value="${esc(r.start)}"></div><div class="field"><label>Срок реализации — по *</label><input id="due" type="date" class="input" value="${esc(r.due)}"></div><div class="field"><label>Регион проекта *</label><select id="region" class="select">${['Свердловская область','Тюменская область','Пермский край','Регион не указан'].map(x=>`<option ${x===r.region?'selected':''}>${x}</option>`).join('')}</select></div></div><div class="field" style="margin-top:14px"><label>Клиенты * · можно выбрать несколько</label><div class="client-checks"></div></div></div></section>
+      <section class="card"><div class="card-head"><h2>Наши позиции</h2><span class="card-extra">Цены ${priceCaption(r)} · ₽/м²</span></div><div class="card-body">${lineHtml}<button class="add-row" data-action="add-line">+ Добавить позицию</button></div></section>
+      <section class="card"><div class="card-head"><h2>Предложения конкурентов</h2><span class="card-extra">Для текущей позиции · ${esc(line.product)}</span></div><div class="card-body">${comps||'<p class="muted">Предложения конкурентов пока не добавлены.</p>'}<button class="add-row" data-action="add-competitor">+ Добавить конкурента</button></div></section>
+      ${renderCalculation(r)}
+      </div><aside class="context">${renderComparison(r)}</aside></div>`;
+    }
+    function renderCalculation(r){
+      const line=activeLine(r), priceEx=Number(line.price)/window.hFactor(r), base=window.hBase(products[line.product],r), projectTotal=Number(line.price)*Number(line.area);
+      const rows=r.clients.map(c=>{const d=clientDirectory[c]||clientDirectory['Новый клиент'];const tariff=r.tariffs&&Object.prototype.hasOwnProperty.call(r.tariffs,c)?r.tariffs[c]:d.tariff;return `<tr><td>${esc(c)}</td><td>${esc(d.delivery)}</td><td>${esc(d.tariffMonth)}</td><td>${tariff==null?'<span class="muted">Тариф не задан</span>':`${money(tariff)} ₽/м²`}</td><td><strong data-fca-client="${esc(c)}">${tariff==null?'—':money(priceEx-Number(tariff))}</strong></td></tr>`}).join('');
+      return `<section class="card"><div class="card-head"><h2>Доставка и FCA · ${esc(line.product)}</h2><span class="card-extra">Тарифы клиентов расчёта</span></div><div class="card-body"><div class="table-wrap"><table class="data-table fca-table"><thead><tr><th>Клиент</th><th>Город / станция</th><th>Период тарифа клиента</th><th>Тариф без НДС</th><th>FCA без НДС</th></tr></thead><tbody>${rows||'<tr><td colspan="5">Выберите клиента для расчёта.</td></tr>'}</tbody></table></div></div></section>`;
+    }
+    function renderComparison(r){
+      const line=activeLine(r), selected=r.clients.includes(ui.compareClient)?ui.compareClient:(r.clients[0]||'Новый клиент');ui.compareClient=selected;
+      const clientRows=history.filter(h=>h.client===selected).map(h=>`<tr><td>${esc(h.product)}</td><td>${esc(h.date.slice(0,5))}</td><td>${money(historyInMode(h.offered,r))}</td><td>${money(historyInMode(h.approved,r))}</td></tr>`).join('');
+      const otherClientRows=history.filter(h=>h.client!==selected&&h.product===line.product).map(h=>`<tr><td>${esc(h.client)}</td><td>${esc(h.date.slice(0,5))}</td><td>${money(historyInMode(h.offered,r))}</td><td>${money(historyInMode(h.approved,r))}</td></tr>`).join('');
+      const regionRows=history.filter(h=>h.region===r.region&&h.product===line.product);const regionVals=regionRows.map(x=>historyInMode(x.offered,r));const min=regionVals.length?Math.min(...regionVals):null,max=regionVals.length?Math.max(...regionVals):null,avg=regionVals.length?regionVals.reduce((a,b)=>a+b,0)/regionVals.length:null;
+      const activeCompetitors=r.competitorRows.filter(c=>c.lineId===line.id);
+      const competitorRows=activeCompetitors.map(comp=>{const key=`${comp.maker}|${comp.product}|${comp.thickness}`,values=(competitorHistory[key]||[]).map(value=>historyInMode(value,r)),average=values.length?values.reduce((a,b)=>a+b,0)/values.length:null;return `<tr><td>${esc(comp.maker)}<br><small class="muted">${esc(comp.product)}, ${esc(comp.thickness)} мм</small></td><td>${money(comp.price)}</td><td>${average==null?'Нет истории':`${money(average)}<br><small class="muted">${values.map(money).join(' · ')}</small>`}</td></tr>`}).join('');
+      return `<section class="card comparison"><div class="card-head"><h2>Цены для сравнения</h2><span class="card-extra">₽/м² ${priceCaption(r)}</span></div><div class="card-body"><div class="field"><label>История клиента</label><select id="compare-client" class="select">${r.clients.map(c=>`<option ${c===selected?'selected':''}>${esc(c)}</option>`).join('')}</select></div><h3>Предложения клиенту</h3>${clientRows?`<table class="mini-table"><thead><tr><th>Ассортимент</th><th>Дата</th><th>Предлож.</th><th>Утв.</th></tr></thead><tbody>${clientRows}</tbody></table>`:`<div class="notice">Для этого клиента истории пока нет.</div>`}
+      <h3>Другие клиенты · ${esc(line.product)}</h3>${otherClientRows?`<table class="mini-table"><thead><tr><th>Клиент</th><th>Дата</th><th>Предлож.</th><th>Утв.</th></tr></thead><tbody>${otherClientRows}</tbody></table>`:`<div class="notice">У других клиентов нет истории по выбранному продукту.</div>`}
+      <h3>${esc(r.region)} · ${esc(line.product)}</h3>${regionVals.length?`<div class="range"><div><strong>${money(min)}</strong><small>Мин.</small></div><div><strong>${money(avg)}</strong><small>Средняя</small></div><div><strong>${money(max)}</strong><small>Макс.</small></div></div><p class="muted">${regionVals.length} предлож. · октябрь–ноябрь 2026</p>`:`<div class="notice">Нет сопоставимых предложений по продукту и региону.</div>`}
+      <h3>Сопоставленные конкуренты</h3>${competitorRows?`<table class="mini-table"><thead><tr><th>Конкурент</th><th>Сейчас</th><th>Средняя ранее</th></tr></thead><tbody>${competitorRows}</tbody></table>`:`<div class="notice">Добавьте предложение конкурента для текущей позиции.</div>`}</div></section>`;
+    }
+    function renderDecision(){
+      const r=current(), line=activeLine(r), s=displayStatus(r), d=products[line.product]||{};
+      let acts=tag(s);
+      if(s==='На согласовании'&&canDecide()) acts+=`<button class="btn" data-action="return">Вернуть на доработку</button><button class="btn primary" data-action="approve">Утвердить</button>`;
+      if(s==='На доработку'&&canManage()) acts+=`<button class="btn primary" data-action="edit">Редактировать и повторно отправить</button>`;
+      if(s==='Новое'&&canManage()) acts+=`<button class="btn primary" data-action="edit">Редактировать</button>`;
+      const snapshot=r.returnSnapshot||null, oldMode=snapshot||r;
+      const oldActive=snapshot?.lines?.find(item=>item.id===line.id)||snapshot?.lines?.find(item=>item.product===line.product)||null;
+      const projectTotal=r.lines.reduce((sum,item)=>sum+Number(item.price||0)*Number(item.area||0),0);
+      const changeRows=r.lines.map(currentLine=>{const oldLine=snapshot?.lines?.find(item=>item.id===currentLine.id)||snapshot?.lines?.find(item=>item.product===currentLine.product);return `<tr><td>Цена · ${esc(currentLine.product)}</td><td>${oldLine?money(oldLine.price):'—'}</td><td><strong>${money(currentLine.price)}</strong></td></tr>`}).join('');
+      const fcaRows=r.clients.map(c=>{const tariff=r.tariffs&&Object.prototype.hasOwnProperty.call(r.tariffs,c)?r.tariffs[c]:clientDirectory[c]?.tariff,destination=clientDirectory[c]?.delivery||'Точка не указана';return `<tr><td><strong>${esc(c)}</strong><br><small class="muted">${esc(destination)}</small></td><td>${tariff==null?'<span class="muted">Не задан</span>':`${money(tariff)}<br><small class="muted">${esc(clientDirectory[c]?.tariffMonth||'период не указан')}</small>`}</td><td>${r.lines.map(item=>`<div><strong>${tariff==null?'—':money(Number(item.price)/window.hFactor(r)-Number(tariff))}</strong> <small class="muted">${esc(item.product)}</small></div>`).join('')}</td></tr>`}).join('');
+      const competitorDecisionRows=r.competitorRows.map(comp=>{const own=r.lines.find(item=>item.id===comp.lineId),values=(competitorHistory[`${comp.maker}|${comp.product}|${comp.thickness}`]||[]).map(value=>historyInMode(value,r)),average=values.length?values.reduce((a,b)=>a+b,0)/values.length:null;return `<tr><td>${esc(own?.product||'Позиция удалена')}</td><td>${esc(comp.maker)}</td><td>${esc(comp.product)}</td><td>${esc(comp.thickness)} мм</td><td>${money(comp.price)}</td><td>${average==null?'Нет истории':money(average)}</td></tr>`}).join('');
+      return `${crumbs(['Согласование цен',r.number])}${pageHead(r.project,`${r.number} · Редакция ${r.revision||1}`,acts)}
+      <section class="card"><div class="card-body"><div class="decision-summary"><div class="metric"><strong>${money(projectTotal)} ₽</strong><small>Общая цена проекта ${priceCaption(r)}</small></div><div class="metric"><strong>${dateText(r.start)} — ${dateText(r.due)}</strong><small>Срок проекта${r.extensionDate?` · продление до ${dateText(r.extensionDate)}`:''}</small></div><div class="metric"><strong>${esc(r.market==='export'?'Экспортный':'Российский')} прайс</strong><small>Основа: базовый прайс по продукту, цены ${priceCaption(r)}; FCA = предложение без НДС − тариф</small></div></div></div></section>
+      <section class="card"><div class="card-head"><h2>Предложение на утверждение</h2><span class="card-extra">${esc(modeText(r))} · ${r.clients.map(esc).join(' · ')}</span></div><div class="card-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Наш ассортимент</th><th>Площадь</th><th>База ${priceCaption(r)}, ₽/м²</th><th>Предлагаемая ${priceCaption(r)}, ₽/м²</th><th>Отклонение от базы</th></tr></thead><tbody>${r.lines.map(l=>{const base=window.hBase(products[l.product],r);return `<tr><td>${esc(l.product)}</td><td>${qty(l.area)} м²</td><td>${money(base)}</td><td><strong>${money(l.price)}</strong></td><td>${money(Number(l.price)-base)}</td></tr>`}).join('')}</tbody></table></div></div></section>
+      <section class="card"><div class="card-head"><h2>FCA по клиентам</h2><span class="card-extra">₽/м² без НДС</span></div><div class="card-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Клиент и точка</th><th>Тариф без НДС</th><th>FCA по позициям</th></tr></thead><tbody>${fcaRows||'<tr><td colspan="3">Клиенты не выбраны.</td></tr>'}</tbody></table></div></div></section>
+      ${snapshot?`<section class="card"><div class="card-head"><h2>Изменения после возврата</h2><span class="card-extra">снимок редакции ${esc(snapshot.revision)}</span></div><div class="card-body">${r.returnComment?`<p class="quote">«${esc(r.returnComment)}»</p>`:''}<div class="table-wrap"><table class="data-table"><thead><tr><th>Цена, ₽/м²</th><th>Было · ${esc(modeText(oldMode))}</th><th>Стало · ${esc(modeText(r))}</th></tr></thead><tbody>${changeRows}</tbody></table></div></div></section>`:''}
+      <details class="disclosure"><summary>Предложения конкурентов (${r.competitorRows.length})</summary><section class="card"><div class="card-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Наша позиция</th><th>Конкурент</th><th>Продукт</th><th>Толщина</th><th>Сейчас, ₽/м²</th><th>Средняя ранее, ₽/м²</th></tr></thead><tbody>${competitorDecisionRows||'<tr><td colspan="6"><div class="empty">Предложения конкурентов не указаны.</div></td></tr>'}</tbody></table></div></div></section></details>
+      <details class="disclosure"><summary>Маршрут и история (${(r.history||[]).length})</summary><section class="card"><div class="card-body"><div class="timeline">${(r.history||[]).map(e=>`<div class="event"><time>${esc(e.at)}</time><b>${esc(e.title)}</b><small>${esc(e.text)}</small></div>`).join('')||'<div class="empty">История появится после первого сохранения.</div>'}</div></div></section></details>`;
+    }
+    function renderClients(){
+      return `${crumbs(['Клиенты'])}${pageHead('Клиенты','Выберите компанию, чтобы открыть проектные цены и историю')}<div class="client-list">${Object.entries(clientDirectory).filter(([n])=>n!=='Новый клиент').map(([n,d])=>`<button class="client-card" data-client="${esc(n)}"><b>${esc(n)}</b><span>${esc(d.delivery)} · ${esc(d.region)}</span></button>`).join('')}</div>`;
+    }
+    function renderClient(){
+      const name=ui.client,d=clientDirectory[name]||clientDirectory['Новый клиент'];const related=state.records.filter(r=>r.clients.includes(name));
+      const projectRows=related.map(r=>`<tr><td><button class="link" data-open="${esc(r.number)}">${esc(r.project)}</button></td><td>по ${esc(r.due.split('-').reverse().join('.'))}</td><td>${r.lines.map(l=>esc(l.product)).join(', ')}</td><td>${tag(displayStatus(r))}</td></tr>`).join('');
+      const events=[];related.forEach(r=>(r.history||[]).forEach(e=>events.push({...e,number:r.number,project:r.project}))); 
+      return `${crumbs(['Клиенты',name])}${pageHead(name,`${d.delivery} · ${d.region}`)}<div class="tabs"><button class="tab ${ui.clientTab==='prices'?'active':''}" data-client-tab="prices">Согласованные прайсы</button><button class="tab ${ui.clientTab==='history'?'active':''}" data-client-tab="history">История</button></div>${ui.clientTab==='prices'?`<section class="card"><div class="card-head"><h2>Оптовые прайсы по продуктам</h2><span class="stage-pill">Этап 2</span></div><div class="card-body"><div class="wholesale"><div class="grow"><h3>Прайс по простым продуктам</h3><span class="muted">Индивидуальные цены клиента будут доступны на втором этапе.</span></div><span class="tag">Размещение для обсуждения</span></div></div></section><section class="card"><div class="card-head"><h2>Проектные цены</h2><span class="card-extra">${related.length} проект(а)</span></div><div class="card-body"><div class="table-wrap"><table class="data-table"><thead><tr><th>Наименование проекта</th><th>Срок реализации</th><th>Ассортимент</th><th>Статус</th></tr></thead><tbody>${projectRows||'<tr><td colspan="4"><div class="empty">Проектных цен пока нет.</div></td></tr>'}</tbody></table></div></div></section>`:`<section class="card"><div class="card-head"><h2>История согласований</h2></div><div class="card-body"><div class="timeline">${events.map(e=>`<div class="event"><time>${esc(e.at)} · ${esc(e.number)}</time><b>${esc(e.title)}</b><small>${esc(e.project)} · ${esc(e.text)}</small></div>`).join('')||'<div class="empty"><b>Истории пока нет</b>Действия по согласованиям клиента появятся здесь.</div>'}</div></div></section>`}`;
+    }
+    function markDirty(){ui.dirty=true}
+    function updateEditingFromInputs(){
+      const r=ui.editing;if(!r)return;
+      const project=document.getElementById('project'),start=document.getElementById('start'),due=document.getElementById('due'),extensionDate=document.getElementById('extension-date'),region=document.getElementById('region'),market=document.getElementById('market'),noVat=document.getElementById('no-vat');if(project)r.project=project.value;if(start)r.start=start.value;if(due)r.due=due.value;if(extensionDate)r.extensionDate=extensionDate.value;if(region)r.region=region.value;if(market)r.market=market.value;if(noVat)r.noVat=noVat.checked;
+      r.tariffs=r.tariffs||{};r.clients.forEach(name=>{if(!Object.prototype.hasOwnProperty.call(r.tariffs,name))r.tariffs[name]=clientDirectory[name]?.tariff??null});
+      document.querySelectorAll('.line-product').forEach(x=>{const l=r.lines.find(y=>y.id===x.dataset.id);if(l)l.product=x.value});
+      document.querySelectorAll('.line-area').forEach(x=>{const l=r.lines.find(y=>y.id===x.dataset.id);if(l)l.area=parseNumber(x.value)});
+      document.querySelectorAll('.line-price').forEach(x=>{const l=r.lines.find(y=>y.id===x.dataset.id);if(l)l.price=parseNumber(x.value)});
+      document.querySelectorAll('.comp-maker').forEach(x=>{const c=r.competitorRows.find(y=>y.id===x.dataset.id);if(c)c.maker=x.value});
+      document.querySelectorAll('.comp-product').forEach(x=>{const c=r.competitorRows.find(y=>y.id===x.dataset.id);if(c)c.product=x.value.trim()});
+      document.querySelectorAll('.comp-thickness').forEach(x=>{const c=r.competitorRows.find(y=>y.id===x.dataset.id);if(c)c.thickness=x.value.trim()});
+      document.querySelectorAll('.comp-price').forEach(x=>{const c=r.competitorRows.find(y=>y.id===x.dataset.id);if(c)c.price=parseNumber(x.value)});
+    }
+    function parseNumber(v){return Number(String(v).replace(/\s/g,'').replace(',','.'))}
+    function updateLiveNumbers(){
+      const r=ui.editing;if(!r)return;
+      r.lines.forEach(line=>{const base=window.hBase(products[line.product],r),net=Number(line.price)/window.hFactor(r);const netEl=document.querySelector(`[data-line-net="${CSS.escape(line.id)}"]`),devEl=document.querySelector(`[data-line-deviation="${CSS.escape(line.id)}"]`);if(netEl)netEl.textContent=`${money(net)} ₽/м²`;if(devEl)devEl.textContent=`${money((Number(line.price)||0)-base)} ₽/м²`});
+      const line=activeLine(r);if(!line)return;const net=Number(line.price)/window.hFactor(r),priceEl=document.querySelector('[data-active-price]'),netEl=document.querySelector('[data-active-net]'),totalEl=document.querySelector('[data-active-total]');if(priceEl)priceEl.textContent=money(line.price);if(netEl)netEl.textContent=money(net);if(totalEl)totalEl.textContent=`${money(Number(line.price)*Number(line.area))} ₽`;
+      r.clients.forEach(client=>{const tariff=r.tariffs&&Object.prototype.hasOwnProperty.call(r.tariffs,client)?r.tariffs[client]:clientDirectory[client]?.tariff;const el=document.querySelector(`[data-fca-client="${CSS.escape(client)}"]`);if(el)el.textContent=tariff==null?'—':money(net-Number(tariff))});
+    }
+    function validate(r){
+      const errors=[];if(!r.project.trim())errors.push('Укажите проект.');if(!['ru','export'].includes(r.market))errors.push('Выберите тип прайса.');if(!r.start)errors.push('Укажите начало срока.');if(!r.due)errors.push('Укажите окончание срока.');if(r.start&&r.due&&r.start>r.due)errors.push('Дата начала не может быть позже даты окончания.');if(r.extensionDate&&r.due&&r.extensionDate<r.due)errors.push('Дата продления не может быть раньше даты окончания.');if(!r.region||r.region==='Регион не указан')errors.push('Укажите регион проекта.');if(!r.clients.length)errors.push('Выберите хотя бы одного клиента.');
+      r.lines.forEach((l,i)=>{if(!products[l.product])errors.push(`Позиция ${i+1}: выберите продукт из прайса.`);if(!(Number(l.area)>0))errors.push(`Позиция ${i+1}: площадь должна быть больше нуля.`);if(!(Number(l.price)>0))errors.push(`Позиция ${i+1}: цена должна быть больше нуля.`)});
+      r.competitorRows.forEach((c,i)=>{if(!c.product.trim())errors.push(`Конкурент ${i+1}: укажите продукт.`);if(!(Number(c.price)>0))errors.push(`Конкурент ${i+1}: цена должна быть больше нуля.`)});return errors;
+    }
+    function showErrors(errors){const box=document.getElementById('form-error');if(box)box.innerHTML=errors.length?`<div class="notice warning" style="margin-bottom:16px"><b>Проверьте форму</b><br>${errors.map(esc).join('<br>')}</div>`:'';if(errors.length)window.scrollTo({top:0,behavior:'smooth'})}
+    function persistEditing(status){
+      updateEditingFromInputs();const errors=validate(ui.editing);if(errors.length){showErrors(errors);return false}
+      const r=deepCopy(ui.editing);r.status=status;const idx=state.records.findIndex(x=>x.number===r.number);if(idx>=0)state.records[idx]=r;else state.records.unshift(r);saveState();ui.editing=deepCopy(r);ui.dirty=false;return true;
+    }
+    function navigate(page){if(ui.dirty&&!confirm('Есть несохранённые изменения. Покинуть форму?'))return;ui.dirty=false;ui.page=page;render()}
+    function openRecord(number){ui.currentNumber=number;const r=state.records.find(x=>x.number===number);if(!r)return;if(displayStatus(r)==='Новое'&&canManage()){ui.editing=deepCopy(r);ui.page='editor'}else ui.page='decision';render()}
+    function openClient(name){ui.client=name;ui.clientTab='prices';ui.page='client';render()}
+    function bind(){
+      document.getElementById('role')?.addEventListener('change',e=>{const nextRole=e.target.value,previousRole=state.role;if(ui.page==='editor'&&nextRole==='approver'){if(ui.dirty&&!confirm('При переходе к роли руководителя несохранённые изменения формы будут отменены. Продолжить?')){e.target.value=previousRole;return}ui.dirty=false;ui.editing=null;ui.page=state.records.some(r=>r.number===ui.currentNumber)?'decision':'registry'}state.role=nextRole;saveState();render()});
+      document.querySelectorAll('[data-action]').forEach(el=>el.addEventListener('click',()=>handleAction(el.dataset.action)));
+      document.querySelectorAll('[data-open]').forEach(el=>el.addEventListener('click',()=>openRecord(el.dataset.open)));
+      document.querySelectorAll('[data-client]').forEach(el=>el.addEventListener('click',()=>openClient(el.dataset.client)));
+      document.querySelectorAll('[data-tab]').forEach(el=>el.addEventListener('click',()=>{ui.tab=el.dataset.tab;render()}));
+      document.querySelectorAll('[data-client-tab]').forEach(el=>el.addEventListener('click',()=>{ui.clientTab=el.dataset.clientTab;render()}));
+      document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>toast('Этот раздел не входит в демонстрацию согласования цен')));
+      const search=document.getElementById('search');if(search)search.addEventListener('input',e=>{ui.search=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById('search');n.focus();n.setSelectionRange(pos,pos)});
+      document.getElementById('status-filter')?.addEventListener('change',e=>{ui.filter=e.target.value;render()});document.getElementById('waiting')?.addEventListener('change',e=>{ui.waiting=e.target.checked;render()});
+      document.querySelectorAll('.line-type').forEach(el=>el.addEventListener('change',e=>{updateEditingFromInputs();const line=ui.editing.lines.find(item=>item.id===e.target.dataset.id),firstProduct=Object.keys(products).find(name=>products[name].type===e.target.value);if(line&&firstProduct)line.product=firstProduct;markDirty();render()}));
+      document.querySelectorAll('.line-product,.client-check,#region,#market,#no-vat,.comp-maker,.comp-product,.comp-thickness').forEach(el=>el.addEventListener('change',()=>{updateEditingFromInputs();markDirty();render()}));
+      document.querySelectorAll('#project,#start,#due,#extension-date,.line-price,.line-area,.comp-price').forEach(el=>el.addEventListener('input',()=>{updateEditingFromInputs();markDirty();updateLiveNumbers()}));
+      document.querySelectorAll('input[name="activeLine"]').forEach(el=>el.addEventListener('change',e=>{updateEditingFromInputs();ui.editing.activeLineId=e.target.value;markDirty();render()}));
+      document.querySelectorAll('[data-remove-line]').forEach(el=>el.addEventListener('click',()=>{updateEditingFromInputs();const lineId=el.dataset.removeLine;ui.editing.lines=ui.editing.lines.filter(x=>x.id!==lineId);ui.editing.competitorRows=ui.editing.competitorRows.filter(x=>x.lineId!==lineId);if(!ui.editing.lines.some(x=>x.id===ui.editing.activeLineId))ui.editing.activeLineId=ui.editing.lines[0].id;markDirty();render()}));
+      document.querySelectorAll('[data-remove-competitor]').forEach(el=>el.addEventListener('click',()=>{updateEditingFromInputs();ui.editing.competitorRows=ui.editing.competitorRows.filter(x=>x.id!==el.dataset.removeCompetitor);markDirty();render()}));
+      document.getElementById('compare-client')?.addEventListener('change',e=>{ui.compareClient=e.target.value;render()});
+    }
+    function handleAction(action){
+      if(action==='registry')return navigate('registry');if(action==='clients')return navigate('clients');
+      if(action==='reset'){if(confirm('Сбросить все изменения и вернуть исходный сценарий ЦР-0148?')){state=seed();saveState();ui={...ui,page:'registry',tab:'agreements',currentNumber:'ЦР-0148',editing:null,dirty:false,filter:'Все статусы',search:'',waiting:false};render();toast('Демо-данные восстановлены')}return}
+      if(action==='create'){if(!canManage())return toast('Создание доступно менеджеру продаж');const max=Math.max(...state.records.map(r=>Number(r.number.replace(/\D/g,''))||0));const id='l'+Date.now();ui.editing={number:`ЦР-${String(max+1).padStart(4,'0')}`,project:'',market:'ru',noVat:false,start:DEMO_DATE,due:'2027-03-31',extensionDate:'',region:'Свердловская область',clients:[],tariffs:{},status:'Новое',revision:1,lines:[{id,product:'Low-E 6 мм',area:1000,price:1195.60}],activeLineId:id,competitorRows:[],history:[]};ui.currentNumber=ui.editing.number;ui.page='editor';ui.dirty=false;render();return}
+      if(action==='edit'){if(!canManage())return toast('Редактирование доступно менеджеру продаж');const r=current();ui.editing=deepCopy(r);ui.page='editor';ui.dirty=false;render();return}
+      if(action==='add-line'){if(!canManage())return;updateEditingFromInputs();const id='l'+Date.now();ui.editing.lines.push({id,product:'Low-E 6 мм',area:1000,price:1195.60});ui.editing.activeLineId=id;markDirty();render();return}
+      if(action==='add-competitor'){if(!canManage())return;updateEditingFromInputs();const line=activeLine(ui.editing),p=products[line.product];ui.editing.competitorRows.push({id:'c'+Date.now(),lineId:line.id,maker:'Larta',product:p.competitor,thickness:p.thickness,price:1230});markDirty();render();return}
+      if(action==='save'){if(!canManage())return toast('Сохранение доступно менеджеру продаж');const keepStatus=ui.editing.status==='На доработку'?'На доработку':'Новое';if(persistEditing(keepStatus)){toast('Черновик сохранён локально');ui.page='registry';render()}return}
+      if(action==='submit'){if(!canManage())return toast('Отправка доступна менеджеру продаж');updateEditingFromInputs();const wasReturned=ui.editing.status==='На доработку';const errors=validate(ui.editing);if(errors.length){showErrors(errors);return}if(wasReturned){ui.editing.revision=(ui.editing.revision||1)+1;ui.editing.history=ui.editing.history||[];ui.editing.history.unshift({at:nowLabel(),title:'Менеджер отправил исправления',text:`Редакция ${ui.editing.revision}`})}else{ui.editing.history=ui.editing.history||[];ui.editing.history.unshift({at:nowLabel(),title:'Отправлено на согласование',text:`Менеджер продаж · редакция ${ui.editing.revision||1}`})}if(persistEditing('На согласовании')){ui.currentNumber=ui.editing.number;ui.page='decision';render();toast('Отправлено на согласование')}return}
+      if(action==='return'){if(!canDecide())return toast('Возврат доступен руководителю продаж');return openReturnModal()}
+      if(action==='approve'){if(!canDecide())return toast('Решение доступно руководителю продаж');const r=current();r.status='Утверждено';r.history=r.history||[];r.history.unshift({at:nowLabel(),title:'Цена утверждена',text:`${roleLabel()} · редакция ${r.revision||1}`});saveState();render();toast('Цена утверждена');return}
+    }
+    function openReturnModal(){
+      const modal=document.getElementById('modal');modal.innerHTML=`<div class="modal"><div class="modal-head"><h2 id="modal-title">Вернуть на доработку</h2><button class="btn small ghost" id="modal-close" aria-label="Закрыть">×</button></div><div class="modal-body"><p>Комментарий увидит менеджер рядом с изменениями цены.</p><div class="field"><label for="return-comment">Комментарий *</label><textarea id="return-comment" class="textarea" maxlength="500" placeholder="Например, пересмотрите цену с учётом доставки"></textarea><div id="comment-error" class="error-text"></div></div></div><div class="modal-foot"><button class="btn" id="modal-cancel">Отмена</button><button class="btn primary" id="modal-confirm">Вернуть</button></div></div>`;modal.classList.add('open');const close=()=>modal.classList.remove('open');document.getElementById('modal-close').onclick=close;document.getElementById('modal-cancel').onclick=close;modal.onclick=e=>{if(e.target===modal)close()};document.getElementById('return-comment').focus();document.getElementById('modal-confirm').onclick=()=>{const input=document.getElementById('return-comment'),value=input.value.trim();if(!value){input.classList.add('invalid');document.getElementById('comment-error').textContent='Комментарий обязателен для возврата.';return}const r=current();r.returnSnapshot={revision:r.revision||1,market:r.market,noVat:r.noVat,start:r.start,due:r.due,extensionDate:r.extensionDate||'',lines:deepCopy(r.lines),tariffs:deepCopy(r.tariffs||{}),at:nowLabel()};r.status='На доработку';r.returnComment=value;r.history=r.history||[];r.history.unshift({at:nowLabel(),title:'Возвращено на доработку',text:value});saveState();close();render();toast('Возвращено менеджеру на доработку')};
+    }
+    window.addEventListener('beforeunload',e=>{if(ui.dirty){e.preventDefault();e.returnValue=''}});
+    render();
+  })();
+  </script>
+</body>
+</html>
